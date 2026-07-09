@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>类鲨鱼记账 App 产品分析报告</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+  :root{
+    --bg:#fafaf8; --card:#ffffff; --text:#2c2c2a; --text-2:#5f5e5a; --text-3:#888780;
+    --border:#e4e2da; --border-2:#d3d1c7;
+    --teal:#1d9e75; --teal-50:#e1f5ee; --blue:#378add; --blue-50:#e6f1fb;
+    --coral:#d85a30; --coral-50:#faece7; --amber:#ba7517; --amber-50:#faeeda;
+    --purple:#7f77dd; --purple-50:#eeedfe; --green:#639922;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--text);line-height:1.7;font-size:15px;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:920px;margin:0 auto;padding:48px 32px 80px}
+  h1{font-size:30px;font-weight:600;letter-spacing:-0.5px;margin-bottom:6px}
+  .subtitle{font-size:15px;color:var(--text-2);margin-bottom:4px}
+  .meta{font-size:13px;color:var(--text-3);margin-bottom:32px}
+  h2{font-size:22px;font-weight:600;margin:48px 0 18px;padding-bottom:10px;border-bottom:2px solid var(--border);letter-spacing:-0.3px}
+  h3{font-size:17px;font-weight:600;margin:28px 0 12px;color:var(--text)}
+  h4{font-size:15px;font-weight:600;margin:20px 0 8px;color:var(--text-2)}
+  p{margin-bottom:14px;color:var(--text)}
+  ul,ol{margin:0 0 16px 22px}
+  li{margin-bottom:6px}
+  .lead{font-size:16px;color:var(--text-2)}
+  .summary-box{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:24px 28px;margin:24px 0}
+  .summary-box h3{margin-top:0}
+  .summary-box ul{margin-bottom:0}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:22px 26px;margin:16px 0}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media(max-width:680px){.grid2{grid-template-columns:1fr}}
+  .tag{display:inline-block;font-size:12px;padding:2px 10px;border-radius:20px;margin-right:6px;font-weight:500}
+  .tag-teal{background:var(--teal-50);color:#085041}
+  .tag-blue{background:var(--blue-50);color:#0c447c}
+  .tag-coral{background:var(--coral-50);color:#712b13}
+  .tag-amber{background:var(--amber-50);color:#633806}
+  .tag-purple{background:var(--purple-50);color:#3c3489}
+  .tag-gray{background:#f1efe8;color:#444441}
+  table{width:100%;border-collapse:collapse;margin:16px 0;font-size:13.5px;background:var(--card);border-radius:12px;overflow:hidden;border:1px solid var(--border)}
+  th{background:#f1efe8;text-align:left;padding:11px 12px;font-weight:600;color:var(--text-2);border-bottom:1px solid var(--border-2);white-space:nowrap}
+  td{padding:10px 12px;border-bottom:1px solid var(--border);vertical-align:top}
+  tr:last-child td{border-bottom:none}
+  tr:hover td{background:#fbfbf9}
+  .metric-row{display:flex;gap:14px;flex-wrap:wrap;margin:16px 0}
+  .metric{flex:1;min-width:140px;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px}
+  .metric .label{font-size:12px;color:var(--text-3);margin-bottom:6px}
+  .metric .value{font-size:22px;font-weight:600;color:var(--text)}
+  .metric .unit{font-size:13px;color:var(--text-3);font-weight:400}
+  .swot{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:16px 0}
+  @media(max-width:680px){.swot{grid-template-columns:1fr}}
+  .swot div{border-radius:10px;padding:16px;border:1px solid var(--border)}
+  .swot h4{margin:0 0 8px;font-size:14px}
+  .swot .s{background:#eaf3de;border-color:#c0dd97}.swot .s h4{color:#27500a}
+  .swot .w{background:#faece7;border-color:#f5c4b3}.swot .w h4{color:#712b13}
+  .swot .o{background:#e6f1fb;border-color:#b5d4f4}.swot .o h4{color:#0c447c}
+  .swot .t{background:#faeeda;border-color:#fac775}.swot .t h4{color:#633806}
+  .swot ul{margin:0 0 0 18px;font-size:13px}
+  .phase{display:flex;gap:0;margin:20px 0;flex-wrap:wrap}
+  .phase-col{flex:1;min-width:240px;border:1px solid var(--border);border-radius:12px;margin:6px;overflow:hidden;background:var(--card)}
+  .phase-head{padding:12px 16px;font-weight:600;font-size:15px}
+  .phase-col.p1 .phase-head{background:var(--teal-50);color:#085041}
+  .phase-col.p2 .phase-head{background:var(--blue-50);color:#0c447c}
+  .phase-col.p3 .phase-head{background:var(--coral-50);color:#712b13}
+  .phase-body{padding:14px 16px}
+  .phase-body ul{margin:0 0 0 18px;font-size:13.5px}
+  .phase-body li{margin-bottom:8px}
+  .kano-tier{display:flex;align-items:stretch;margin:10px 0;border-radius:10px;overflow:hidden;border:1px solid var(--border)}
+  .kano-label{width:160px;flex-shrink:0;padding:14px;font-weight:600;font-size:14px;display:flex;flex-direction:column;justify-content:center}
+  .kano-content{flex:1;padding:14px 18px;font-size:13.5px}
+  .kano-tier.basic .kano-label{background:var(--blue-50);color:#0c447c}
+  .kano-tier.expect .kano-label{background:var(--teal-50);color:#085041}
+  .kano-tier.excite .kano-label{background:var(--coral-50);color:#712b13}
+  .persona{display:flex;gap:16px;flex-wrap:wrap;margin:14px 0}
+  .persona-card{flex:1;min-width:200px;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px}
+  .persona-card h4{margin:0 0 6px;color:var(--text)}
+  .persona-card p{font-size:13px;color:var(--text-2);margin:0}
+  .callout{border-left:3px solid var(--teal);background:var(--teal-50);padding:14px 18px;border-radius:0 10px 10px 0;margin:16px 0;font-size:14px}
+  .callout.blue{border-color:var(--blue);background:var(--blue-50)}
+  .callout.coral{border-color:var(--coral);background:var(--coral-50)}
+  .callout strong{color:var(--text)}
+  .chart-box{position:relative;width:100%;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px;margin:16px 0}
+  .chart-legend{display:flex;flex-wrap:wrap;gap:14px;margin-top:10px;font-size:12px;color:var(--text-2);justify-content:center}
+  .num{color:var(--teal);font-weight:600}
+  .footer{margin-top:48px;padding-top:24px;border-top:1px solid var(--border);font-size:13px;color:var(--text-3)}
+  .toc{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:18px 24px;margin:24px 0}
+  .toc ol{margin:0 0 0 20px}
+  .toc a{color:var(--blue);text-decoration:none}
+  .toc a:hover{text-decoration:underline}
+  b,strong{font-weight:600}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>类鲨鱼记账 App 产品分析报告</h1>
+<p class="subtitle">从个人记账需求出发的产品规划与竞品分析</p>
+<p class="meta">2026 年 7 月 5 日 · 产品分析</p>
+
+<div class="toc">
+  <strong>目录</strong>
+  <ol>
+    <li><a href="#s1">执行摘要</a></li>
+    <li><a href="#s2">市场与竞品分析</a></li>
+    <li><a href="#s3">用户需求分析</a></li>
+    <li><a href="#s4">产品定位建议</a></li>
+    <li><a href="#s5">功能规划与迭代路线</a></li>
+    <li><a href="#s6">差异化亮点建议</a></li>
+    <li><a href="#s7">技术选型建议</a></li>
+    <li><a href="#s8">总结与行动建议</a></li>
+  </ol>
+</div>
+
+<h2 id="s1">一、执行摘要</h2>
+<div class="summary-box">
+<p class="lead">这份报告围绕"做一个类似鲨鱼记账、优先满足自己记账需求"的目标展开。结论先行：</p>
+<ul>
+  <li><b>市场已成熟</b>，头部产品（鲨鱼记账、钱迹、随手记）下载量均达 5 亿级，但"自用优先"意味着可摆脱商业化包袱，聚焦核心记账体验。</li>
+  <li><b>鲨鱼记账的核心打法是"极简 + 功能减法"</b>，上手快、基础体验好；但存在 <span class="num">5 个明确痛点</span>：预算超支不提醒、分类不够智能、报表深度不足、数据隐私有争议、缺乏账单自动导入。</li>
+  <li><b>建议定位</b>：一款极简、隐私优先、离线可用的个人记账工具，核心是"3 秒记一笔"，让记账成为习惯而非负担。</li>
+  <li><b>差异化方向</b>：AI 智能分类（补鲨鱼短板）、预算实时提醒、本地优先的数据架构、账单一键导入。</li>
+  <li><b>实施策略</b>：MVP 只做 6 个核心功能先满足自己，用真实场景打磨后再迭代，避免过度设计。</li>
+</ul>
+</div>
+
+<h2 id="s2">二、市场与竞品分析</h2>
+
+<h3>2.1 市场概况</h3>
+<p>记账类 App 市场已高度成熟。根据第三方数据平台，鲨鱼记账与随手记的安装量均达 5 亿次级别，钱迹则以"零广告、零社交"的极简定位在年轻用户中快速增长。市场驱动力主要来自三方面：</p>
+<ul>
+  <li><b>"钱花哪了"的焦虑</b>：移动支付普及后，消费无感化加剧了收支失控感，记账成为"找回掌控感"的手段。</li>
+  <li><b>经济压力下的节流意识</b>：近年经济环境下，"开源节流"从口号变成刚需，用户对预算和支出分析的需求上升。</li>
+  <li><b>多渠道收入管理</b>：副业、灵活就业普及，单一人需要管理多个收入来源，超出了支付平台自带账单的能力。</li>
+</ul>
+
+<div class="metric-row">
+  <div class="metric"><div class="label">头部产品安装量</div><div class="value">5亿<span class="unit">+ 次</span></div></div>
+  <div class="metric"><div class="label">鲨鱼记账日均下载</div><div class="value">1.37<span class="unit">万</span></div></div>
+  <div class="metric"><div class="label">核心用户群体</div><div class="value" style="font-size:16px;line-height:1.4">学生·白领<br>自由职业·小企业主</div></div>
+</div>
+
+<h3>2.2 竞品对比</h3>
+<p>下表对比了 7 款主流记账产品的核心维度。评分综合自各评测平台与用户反馈（满分 10 分）。</p>
+
+<table>
+  <tr>
+    <th>产品</th><th>定位</th><th>易用性</th><th>功能深度</th><th>性价比</th><th>数据隐私</th><th>价格策略</th><th>适合人群</th>
+  </tr>
+  <tr>
+    <td><b>钱迹</b></td><td>极简·零广告</td><td>9</td><td>7</td><td>9</td><td>9</td><td>免费无广告，高级版 ¥68/年</td><td>学生、上班族、极简主义者</td>
+  </tr>
+  <tr>
+    <td><b>鲨鱼记账</b></td><td>极简·家庭友好</td><td>8</td><td>7</td><td>7</td><td>6</td><td>免费基础版，会员 ¥98/年</td><td>个人、家庭、记账新手</td>
+  </tr>
+  <tr>
+    <td><b>随手记</b></td><td>专业·全能</td><td>6</td><td>9</td><td>8</td><td>8</td><td>免费+专业版 ¥128/年</td><td>小企业主、复杂财务需求</td>
+  </tr>
+  <tr>
+    <td><b>挖财记账</b></td><td>个人理财</td><td>7</td><td>8</td><td>7</td><td>7</td><td>免费+会员</td><td>有理财需求的个人</td>
+  </tr>
+  <tr>
+    <td><b>薄荷记账</b></td><td>清新·预算追踪</td><td>8</td><td>6</td><td>8</td><td>6</td><td>免费，高级版 ¥48/年</td><td>轻度用户、预算入门</td>
+  </tr>
+  <tr>
+    <td><b>MoneyWiz</b></td><td>专业·投资追踪</td><td>6</td><td>10</td><td>5</td><td>9</td><td>订阅制 ¥200/年起</td><td>投资爱好者、全球用户</td>
+  </tr>
+  <tr>
+    <td><b>YNAB</b></td><td>零基预算·债务管理</td><td>5</td><td>8</td><td>4</td><td>9</td><td>无免费版 ¥500/年起</td><td>严肃理财、有债务目标</td>
+  </tr>
+</table>
+
+<h3>2.3 竞品定位矩阵</h3>
+<p>下图从"功能复杂度"和"上手难度"两个维度定位各产品。你的产品应瞄准<b>左下象限</b>——低复杂度、低上手门槛，这正是鲨鱼记账和钱迹所在的"极简区"。</p>
+
+<div class="chart-box">
+  <div style="position:relative;width:100%;height:380px;">
+    <canvas id="matrixChart" role="img" aria-label="竞品定位矩阵散点图">竞品定位矩阵：横轴功能复杂度，纵轴上手难度。</canvas>
+  </div>
+  <div class="chart-legend">
+    <span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#1d9e75;margin-right:4px;vertical-align:middle"></span>钱迹</span>
+    <span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#378add;margin-right:4px;vertical-align:middle"></span>鲨鱼记账</span>
+    <span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#7f77dd;margin-right:4px;vertical-align:middle"></span>随手记</span>
+    <span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#639922;margin-right:4px;vertical-align:middle"></span>薄荷记账</span>
+    <span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#d85a30;margin-right:4px;vertical-align:middle"></span>MoneyWiz</span>
+    <span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#ba7517;margin-right:4px;vertical-align:middle"></span>你的产品(目标)</span>
+  </div>
+</div>
+
+<h3>2.4 鲨鱼记账 SWOT 分析</h3>
+<div class="swot">
+  <div class="s">
+    <h4>优势 Strengths</h4>
+    <ul>
+      <li>极简设计，3 步完成记账，新手友好</li>
+      <li>基础版无广告，体验干净</li>
+      <li>坚持"功能减法"，不做加法，专注核心</li>
+      <li>日历视图直观，预算/定时记账实用</li>
+    </ul>
+  </div>
+  <div class="w">
+    <h4>劣势 Weaknesses</h4>
+    <ul>
+      <li>预算设置了但超支时不提醒</li>
+      <li>分类不够智能，需手动选择</li>
+      <li>报表深度不足，缺自定义图表</li>
+      <li>数据隐私有争议（曾涉广告推送）</li>
+      <li>无账单自动导入，全靠手动</li>
+    </ul>
+  </div>
+  <div class="o">
+    <h4>机会 Opportunities</h4>
+    <ul>
+      <li>AI 赋能：智能分类、消费预测</li>
+      <li>账单导入：对接支付宝/微信减少手动输入</li>
+      <li>隐私优先定位：本地加密 + 可选云同步</li>
+      <li>经济下行期节流需求上升</li>
+    </ul>
+  </div>
+  <div class="t">
+    <h4>威胁 Threats</h4>
+    <ul>
+      <li>钱迹等竞品已在极简赛道站稳</li>
+      <li>支付平台自带账单功能替代部分需求</li>
+      <li>用户记账坚持率低，留存难</li>
+      <li>银行/支付 App 直接做记账功能</li>
+    </ul>
+  </div>
+</div>
+
+<div class="callout blue">
+  <strong>关键洞察：</strong>鲨鱼记账的"功能减法"是双刃剑——它换来了极简体验，但也留下了预算提醒、智能分类、账单导入等明确缺口。这些缺口不是"锦上添花"，而是用户反复提及的痛点，正是新产品切入的机会。
+</div>
+
+<h2 id="s3">三、用户需求分析</h2>
+
+<h3>3.1 目标用户画像</h3>
+<p>由于产品"优先满足自己记账需求"，核心用户就是<b>你自己</b>，同时辐射到与你类似的用户群：</p>
+<div class="persona">
+  <div class="persona-card">
+    <h4>有记账意愿但难坚持</h4>
+    <p>想记账，但每次打开 App 流程太长就放弃。核心诉求：记账要快，最好 3 秒内完成。</p>
+  </div>
+  <div class="persona-card">
+    <h4>想知道钱花哪了</h4>
+    <p>月底摸不清钱去哪了，需要清晰的分类统计和趋势图。核心诉求：看得清、看得懂。</p>
+  </div>
+  <div class="persona-card">
+    <h4>想控制预算</h4>
+    <p>定了预算但总超支，且超了才知道。核心诉求：实时预算反馈，快超时提醒。</p>
+  </div>
+  <div class="persona-card">
+    <h4>在意数据安全</h4>
+    <p>不想财务数据存在别人服务器上被分析/推送广告。核心诉求：数据自主可控。</p>
+  </div>
+</div>
+
+<h3>3.2 需求层次（KANO 模型）</h3>
+<p>把需求按 KANO 模型分三层，这是功能取舍的依据——先满足底层，再逐层向上。</p>
+
+<div class="kano-tier basic">
+  <div class="kano-label">基本型需求<br><span style="font-size:12px;font-weight:400">必须满足</span></div>
+  <div class="kano-content">
+    <b>收支快速记账</b>（金额+分类+备注，数字键盘快捷输入）· <b>分类管理</b>（支出/收入分类，可自定义）· <b>月度预算设置</b> · <b>资产负债总览</b> · <b>数据本地存储与备份</b>
+  </div>
+</div>
+<div class="kano-tier expect">
+  <div class="kano-label">期望型需求<br><span style="font-size:12px;font-weight:400">体验提升</span></div>
+  <div class="kano-content">
+    <b>图表统计分析</b>（饼图/折线/趋势/排行）· <b>定时周期记账</b>（固定开支自动记录）· <b>账单自动导入</b>（支付宝/微信账单解析）· <b>多账户管理</b> · <b>预算超支提醒</b> · <b>云同步备份</b>
+  </div>
+</div>
+<div class="kano-tier excite">
+  <div class="kano-label">兴奋型需求<br><span style="font-size:12px;font-weight:400">差异化亮点</span></div>
+  <div class="kano-content">
+    <b>AI 智能分类</b>（根据备注/金额/商户自动匹配分类）· <b>存款目标计划</b>（设定目标、追踪进度）· <b>还款智能提醒</b>（信用卡账单日/还款日）· <b>报销单据管理</b> · <b>消费预测建议</b>
+  </div>
+</div>
+
+<h3>3.3 核心痛点（来自竞品用户反馈）</h3>
+<table>
+  <tr><th style="width:30%">痛点</th><th>表现</th><th style="width:18%">严重程度</th></tr>
+  <tr><td>记账麻烦，坚持不下来</td><td>流程长、分类多、要手动选，每天打开就劝退</td><td><span class="tag tag-coral">高</span></td></tr>
+  <tr><td>预算超支无提醒</td><td>鲨鱼记账设了预算但超了才知道，没有实时反馈</td><td><span class="tag tag-coral">高</span></td></tr>
+  <tr><td>分类不智能</td><td>每笔都要手动选分类，没有根据金额/备注自动推荐</td><td><span class="tag tag-amber">中高</span></td></tr>
+  <tr><td>数据隐私顾虑</td><td>担心财务数据被用于广告推送，不敢记真实数据</td><td><span class="tag tag-amber">中高</span></td></tr>
+  <tr><td>换机数据丢失</td><td>免费版仅本地存储，换机/重装后数据没了</td><td><span class="tag tag-amber">中</span></td></tr>
+  <tr><td>账单要手动逐条记</td><td>支付宝/微信已有账单，却还要手动搬到记账 App</td><td><span class="tag tag-amber">中</span></td></tr>
+</table>
+
+<h2 id="s4">四、产品定位建议</h2>
+
+<div class="card">
+  <h3 style="margin-top:0">定位声明</h3>
+  <p style="font-size:17px;color:var(--text)"><b>一款极简、隐私优先的个人记账工具——3 秒记一笔，让记账成为习惯而非负担。</b></p>
+  <p>不追求大而全，不堆砌社交和理财功能。把"记账体验"做到极致：快、准、不烦。数据默认存在你自己的设备上，加密且可导出，你对自己的财务数据拥有完全主权。</p>
+</div>
+
+<h3>4.1 核心价值主张</h3>
+<div class="grid2">
+  <div class="card">
+    <h4>极速记账</h4>
+    <p>数字键盘 + 常用分类快捷入口，目标 3 秒完成一笔。常用分类自动前置，减少选择成本。</p>
+  </div>
+  <div class="card">
+    <h4>清晰流向</h4>
+    <p>收支日历 + 分类占比 + 趋势曲线，一眼看清钱花哪了、比上月多还是少。</p>
+  </div>
+  <div class="card">
+    <h4>智能预算</h4>
+    <p>每笔记账实时显示剩余预算，接近上限主动提醒，超支醒目警告——这是鲨鱼记账缺的关键一环。</p>
+  </div>
+  <div class="card">
+    <h4>数据自主</h4>
+    <p>本地加密存储为默认，云同步可选且端到端加密。数据随时可导出，不做数据绑架。</p>
+  </div>
+</div>
+
+<h3>4.2 与竞品的差异化定位</h3>
+<table>
+  <tr><th>维度</th><th>鲨鱼记账</th><th>钱迹</th><th>你的产品（建议）</th></tr>
+  <tr><td><b>记账速度</b></td><td>较快</td><td>快</td><td>极快（3秒目标，常用分类前置）</td></tr>
+  <tr><td><b>预算提醒</b></td><td>无实时提醒</td><td>基础提醒</td><td>实时反馈 + 临近预警 + 超支警告</td></tr>
+  <tr><td><b>智能分类</b></td><td>手动选择</td><td>AI分类（会员）</td><td>本地规则 + 学习用户习惯，免费</td></tr>
+  <tr><td><b>账单导入</b></td><td>无</td><td>无</td><td>支付宝/微信账单解析导入</td></tr>
+  <tr><td><b>数据架构</b></td><td>云端为主</td><td>本地为主</td><td>本地优先 + 可选端到端加密云同步</td></tr>
+  <tr><td><b>商业模式</b></td><td>免费+会员</td><td>免费+会员</td><td>自用免费，无广告</td></tr>
+</table>
+
+<h2 id="s5">五、功能规划与迭代路线</h2>
+
+<h3>5.1 功能优先级矩阵</h3>
+<p>下图按"用户价值"和"实现难度"两个维度排布所有候选功能。优先做<b>高价值低难度</b>的（右上象限），这是 MVP 的核心。</p>
+
+<div class="chart-box">
+  <div style="position:relative;width:100%;height:420px;">
+    <canvas id="priorityChart" role="img" aria-label="功能优先级矩阵散点图">功能优先级矩阵：横轴实现难度，纵轴用户价值。</canvas>
+  </div>
+</div>
+
+<h3>5.2 三阶段迭代规划</h3>
+<div class="phase">
+  <div class="phase-col p1">
+    <div class="phase-head">MVP · 先满足自己</div>
+    <div class="phase-body">
+      <ul>
+        <li><b>收支快速记账</b>：数字键盘 + 分类选择 + 备注，3 秒目标</li>
+        <li><b>分类管理</b>：预设常用分类 + 自定义，常用自动前置</li>
+        <li><b>月度预算 + 实时提醒</b>：每笔显示剩余，临近预警</li>
+        <li><b>收支日历视图</b>：每日收支一目了然</li>
+        <li><b>基础统计报表</b>：月度收支汇总 + 分类占比饼图</li>
+        <li><b>本地存储 + 导出</b>：SQLite 加密存储，CSV/Excel 导出</li>
+      </ul>
+      <p style="font-size:12px;color:var(--text-3);margin-top:8px">目标：用自己的真实记账场景跑通闭环，打磨记账速度和预算提醒。</p>
+    </div>
+  </div>
+  <div class="phase-col p2">
+    <div class="phase-head">V1 · 体验完善</div>
+    <div class="phase-body">
+      <ul>
+        <li><b>图表深度分析</b>：趋势折线、分类排行、同比环比</li>
+        <li><b>定时/周期记账</b>：固定开支（房租/订阅）自动记录</li>
+        <li><b>账单导入解析</b>：导入支付宝/微信账单 CSV，自动生成记录</li>
+        <li><b>多账户管理</b>：现金/银行卡/信用卡分账户记录</li>
+        <li><b>端到端加密云同步</b>：可选，跨设备同步</li>
+        <li><b>搜索与标签</b>：按金额/分类/备注/标签快速检索</li>
+      </ul>
+      <p style="font-size:12px;color:var(--text-3);margin-top:8px">目标：补齐期望型需求，减少手动操作，提升分析深度。</p>
+    </div>
+  </div>
+  <div class="phase-col p3">
+    <div class="phase-head">V2 · 差异化</div>
+    <div class="phase-body">
+      <ul>
+        <li><b>AI 智能分类</b>：根据备注/金额/商户自动匹配分类</li>
+        <li><b>存款目标计划</b>：设定目标、追踪进度、可视化激励</li>
+        <li><b>信用卡账单管理</b>：账单日/还款日提醒、账单分期</li>
+        <li><b>报销单据管理</b>：拍照记录、标记报销状态</li>
+        <li><b>多账本/共享记账</b>：家庭账本、旅行账本</li>
+        <li><b>数据看板定制</b>：自定义首页卡片和报表</li>
+      </ul>
+      <p style="font-size:12px;color:var(--text-3);margin-top:8px">目标：做鲨鱼记账没做的兴奋型需求，建立差异化壁垒。</p>
+    </div>
+  </div>
+</div>
+
+<h3>5.3 MVP 验收标准</h3>
+<table>
+  <tr><th>功能</th><th>验收标准</th></tr>
+  <tr><td>快速记账</td><td>从打开到完成一笔记账 ≤ 3 秒（常用分类已记忆）</td></tr>
+  <tr><td>预算提醒</td><td>记账后实时显示剩余预算，达到 80% 预警、100% 警告</td></tr>
+  <tr><td>日历视图</td><td>能一眼看到本月每天有无收支、收支金额颜色区分</td></tr>
+  <tr><td>统计报表</td><td>月度收支总额、分类占比饼图、收支结余一目了然</td></tr>
+  <tr><td>数据导出</td><td>一键导出 CSV/Excel，可在其他软件打开</td></tr>
+  <tr><td>数据安全</td><td>本地数据库加密，可设置应用锁（手势/生物识别）</td></tr>
+</table>
+
+<h2 id="s6">六、差异化亮点建议</h2>
+
+<p>以下是针对鲨鱼记账痛点的 5 个差异化方向，按优先级排序：</p>
+
+<div class="card">
+  <h4><span class="tag tag-coral">优先级 1</span> 预算实时提醒系统</h4>
+  <p>鲨鱼记账最大的槽点就是"预算设了但超了才知道"。建议：每笔记账后实时更新并显示剩余预算；达到 80% 弹出温和预警；达到 100% 醒目警告并显示超支金额；分类预算（餐饮/交通等）独立追踪。这是低成本高感知的改进。</p>
+</div>
+
+<div class="card">
+  <h4><span class="tag tag-coral">优先级 2</span> AI 智能分类</h4>
+  <p>用户输入金额和备注后，自动推荐分类。MVP 阶段用"规则匹配 + 用户习惯记忆"即可（如：备注含" Starbucks"→餐饮→咖啡）；V2 可引入轻量模型。常用分类自动前置，进一步减少选择。这一步能显著降低记账的"烦"。</p>
+</div>
+
+<div class="card">
+  <h4><span class="tag tag-amber">优先级 3</span> 账单一键导入</h4>
+  <p>用户从支付宝/微信导出账单 CSV，App 解析后批量生成记账记录，用户只需确认/微调分类。这解决了"支付平台已有账单还要手动搬"的痛点，大幅降低记账负担。注意做好去重和分类映射。</p>
+</div>
+
+<div class="card">
+  <h4><span class="tag tag-blue">优先级 4</span> 本地优先数据架构</h4>
+  <p>数据默认本地 SQLite 加密存储，不上云。云同步作为可选项，且采用端到端加密（用户持密钥）。明确宣传"你的财务数据只属于你"，建立隐私信任。这直接回应用户对鲨鱼记账的隐私顾虑。</p>
+</div>
+
+<div class="card">
+  <h4><span class="tag tag-teal">优先级 5</span> 极速记账交互</h4>
+  <p>核心记账页：大号数字键盘 + 金额实时显示 + 横向滑动的常用分类条 + 快速备注。打开 App 直接进入记账页（可配置）。支持快捷方式/小组件一键进入记账。目标是让"记一笔"的摩擦力降到最低。</p>
+</div>
+
+<h2 id="s7">七、技术选型建议</h2>
+
+<table>
+  <tr><th>层级</th><th>推荐方案</th><th>理由</th></tr>
+  <tr><td><b>移动端框架</b></td><td>Flutter</td><td>一套代码覆盖 iOS/Android，UI 性能接近原生，适合个人开发者维护；社区成熟，记账类 UI 组件丰富</td></tr>
+  <tr><td><b>备选</b></td><td>React Native</td><td>若熟悉前端技术栈；生态更广但性能略逊 Flutter</td></tr>
+  <tr><td><b>本地存储</b></td><td>SQLite + SQLCipher 加密</td><td>轻量、可靠、加密保护隐私；结构化查询方便报表统计</td></tr>
+  <tr><td><b>状态管理</b></td><td>Flutter: Riverpod / Bloc</td><td>记账 App 状态较简单，无需过度工程化</td></tr>
+  <tr><td><b>图表库</b></td><td>fl_chart（Flutter）</td><td>开源、轻量、可定制，支持饼图/折线/柱状</td></tr>
+  <tr><td><b>云同步</b></td><td>可选：自建后端（Node.js/Go）+ 端到端加密</td><td>V1 阶段再做；加密在客户端完成，服务器只存密文</td></tr>
+  <tr><td><b>AI 分类</b></td><td>本地规则引擎 + 用户习惯学习（V2 可选云端模型）</td><td>MVP 不依赖网络，离线可用；先规则后模型，渐进增强</td></tr>
+  <tr><td><b>账单解析</b></td><td>CSV 解析 + 分类映射规则</td><td>支付宝/微信账单格式固定，正则解析即可</td></tr>
+</table>
+
+<div class="callout">
+  <strong>开发建议：</strong>作为"优先满足自己"的项目，建议从 <b>Flutter + SQLite</b> 起步，先做 Android 单平台验证 MVP（用自己的安卓机日常使用），跑顺后再补 iOS。不要一开始就上云同步和后端，那是 V1 的事。
+</div>
+
+<h2 id="s8">八、总结与行动建议</h2>
+
+<div class="summary-box">
+  <h3 style="margin-top:0">行动路线</h3>
+  <ol>
+    <li><b>第一步（1-2 周）</b>：用 Flutter 搭建 MVP，实现快速记账 + 分类 + 预算提醒 + 日历 + 基础报表 + 本地存储。这个阶段只服务你自己。</li>
+    <li><b>第二步（2-4 周）</b>：日常使用 MVP，记录所有"不顺手"的地方，迭代打磨记账速度和预算提醒体验。目标：记账变成肌肉记忆。</li>
+    <li><b>第三步</b>：补齐图表分析、定时记账、账单导入，进入 V1。</li>
+    <li><b>第四步</b>：根据使用数据决定差异化方向，AI 分类 / 存款计划 / 云同步按需推进。</li>
+  </ol>
+</div>
+
+<div class="callout coral">
+  <strong>一句话总结：</strong>别学鲨鱼记账做加法，也别学它把"预算提醒"这种关键功能砍掉。做一个"记账快、预算狠、数据归你"的工具，先把自己伺候好，产品就有了根。
+</div>
+
+<h3>关键决策清单</h3>
+<table>
+  <tr><th>决策项</th><th>建议</th><th>阶段</th></tr>
+  <tr><td>记账入口</td><td>打开 App 直接进记账页 + 桌面小组件</td><td>MVP</td></tr>
+  <tr><td>预算提醒</td><td>实时显示剩余 + 80% 预警 + 100% 警告</td><td>MVP</td></tr>
+  <tr><td>分类方式</td><td>预设 + 自定义 + 常用前置，V2 加 AI 推荐</td><td>MVP→V2</td></tr>
+  <tr><td>数据存储</td><td>本地 SQLite 加密为默认</td><td>MVP</td></tr>
+  <tr><td>云同步</td><td>可选，端到端加密，用户持密钥</td><td>V1</td></tr>
+  <tr><td>账单导入</td><td>支持支付宝/微信 CSV 导入</td><td>V1</td></tr>
+  <tr><td>商业模式</td><td>自用免费无广告，未来可考虑买断制</td><td>—</td></tr>
+  <tr><td>技术栈</td><td>Flutter + SQLite，单平台先行</td><td>MVP</td></tr>
+</table>
+
+<div class="footer">
+  本报告基于鲨鱼记账官网、各大评测平台、用户反馈及竞品分析公开资料整理。<br>
+  产品定位与功能规划为建议方案，实际开发请结合自身需求与技术能力调整。
+</div>
+
+</div>
+
+<script>
+// 竞品定位矩阵
+new Chart(document.getElementById('matrixChart'), {
+  type:'scatter',
+  data:{
+    datasets:[
+      {label:'钱迹', data:[{x:4,y:2.5}], backgroundColor:'#1d9e75', pointRadius:9, pointHoverRadius:11},
+      {label:'鲨鱼记账', data:[{x:4.5,y:3}], backgroundColor:'#378add', pointRadius:9, pointHoverRadius:11},
+      {label:'随手记', data:[{x:9,y:7.5}], backgroundColor:'#7f77dd', pointRadius:9, pointHoverRadius:11},
+      {label:'薄荷记账', data:[{x:3,y:2.8}], backgroundColor:'#639922', pointRadius:9, pointHoverRadius:11},
+      {label:'MoneyWiz', data:[{x:10,y:8}], backgroundColor:'#d85a30', pointRadius:9, pointHoverRadius:11},
+      {label:'你的产品(目标)', data:[{x:3.5,y:2.2}], backgroundColor:'#ba7517', pointRadius:11, pointHoverRadius:13, borderWidth:2, borderColor:'#854f0b'}
+    ]
+  },
+  options:{
+    responsive:true, maintainAspectRatio:false,
+    plugins:{
+      legend:{display:false},
+      tooltip:{callbacks:{label:function(c){return c.dataset.label+' (复杂度:'+c.parsed.x+', 上手难度:'+c.parsed.y+')'}}}
+    },
+    scales:{
+      x:{min:0,max:11,title:{display:true,text:'功能复杂度 →',font:{size:13}},grid:{color:'rgba(136,135,128,0.15)'},ticks:{stepSize:2}},
+      y:{min:0,max:10,title:{display:true,text:'上手难度 →',font:{size:13}},grid:{color:'rgba(136,135,128,0.15)'},ticks:{stepSize:2}}
+    }
+  }
+});
+
+// 功能优先级矩阵
+new Chart(document.getElementById('priorityChart'), {
+  type:'scatter',
+  data:{
+    datasets:[
+      {label:'快速记账', data:[{x:2.5,y:9.5}], backgroundColor:'#1d9e75', pointRadius:8},
+      {label:'预算提醒', data:[{x:3,y:9}], backgroundColor:'#1d9e75', pointRadius:8},
+      {label:'分类管理', data:[{x:2,y:8.5}], backgroundColor:'#1d9e75', pointRadius:8},
+      {label:'日历视图', data:[{x:3,y:7.5}], backgroundColor:'#378add', pointRadius:8},
+      {label:'基础报表', data:[{x:3.5,y:8}], backgroundColor:'#378add', pointRadius:8},
+      {label:'本地存储', data:[{x:3,y:8.5}], backgroundColor:'#1d9e75', pointRadius:8},
+      {label:'图表分析', data:[{x:5,y:8}], backgroundColor:'#378add', pointRadius:8},
+      {label:'定时记账', data:[{x:4.5,y:7}], backgroundColor:'#378add', pointRadius:8},
+      {label:'账单导入', data:[{x:6,y:9}], backgroundColor:'#378add', pointRadius:8},
+      {label:'云同步', data:[{x:7,y:7}], backgroundColor:'#378add', pointRadius:8},
+      {label:'多账户', data:[{x:4,y:6.5}], backgroundColor:'#378add', pointRadius:8},
+      {label:'AI智能分类', data:[{x:7.5,y:9.5}], backgroundColor:'#d85a30', pointRadius:8},
+      {label:'存款计划', data:[{x:5,y:7}], backgroundColor:'#d85a30', pointRadius:8},
+      {label:'信用卡管理', data:[{x:6,y:6.5}], backgroundColor:'#d85a30', pointRadius:8},
+      {label:'报销管理', data:[{x:5.5,y:5}], backgroundColor:'#d85a30', pointRadius:8},
+      {label:'共享记账', data:[{x:8,y:6}], backgroundColor:'#d85a30', pointRadius:8}
+    ]
+  },
+  options:{
+    responsive:true, maintainAspectRatio:false,
+    plugins:{
+      legend:{display:false},
+      tooltip:{callbacks:{label:function(c){var d=c.raw;return c.dataset.label+' (难度:'+d.x+', 价值:'+d.y+')'}}}
+    },
+    scales:{
+      x:{min:0,max:10,title:{display:true,text:'实现难度 →',font:{size:13}},grid:{color:'rgba(136,135,128,0.15)'},ticks:{stepSize:2}},
+      y:{min:0,max:11,title:{display:true,text:'用户价值 →',font:{size:13}},grid:{color:'rgba(136,135,128,0.15)'},ticks:{stepSize:2}}
+    }
+  }
+});
+</script>
+</body>
+</html>

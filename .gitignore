@@ -1,0 +1,31 @@
+# Flutter
+build/
+.dart_tool/
+.packages
+.flutter-plugins
+.flutter-plugins-dependencies
+*.lock
+!pubspec.lock
+
+# IDE
+.idea/
+.vscode/
+*.iml
+*.ipr
+*.iws
+.project
+
+# macOS
+.DS_Store
+
+# Generated
+.dart_tool/
+*.g.dart
+*.freezed.dart
+*.mocks.dart
+
+# Misc
+*.log
+
+# Claude Code local settings
+.claude/

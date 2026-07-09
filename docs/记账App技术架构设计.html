@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>记一笔 (jiyibi) 技术架构设计</title>
+<style>
+  :root{
+    --bg:#fafaf8; --card:#ffffff; --text:#2c2c2a; --text-2:#5f5e5a; --text-3:#888780;
+    --border:#e4e2da; --border-2:#d3d1c7;
+    --teal:#1d9e75; --teal-50:#e1f5ee; --blue:#378add; --blue-50:#e6f1fb;
+    --coral:#d85a30; --coral-50:#faece7; --amber:#ba7517; --amber-50:#faeeda;
+    --purple:#7f77dd; --purple-50:#eeedfe;
+    --code-bg:#1e1e2e; --code-text:#cdd6f4;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--text);line-height:1.7;font-size:15px;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:920px;margin:0 auto;padding:48px 32px 80px}
+  h1{font-size:30px;font-weight:600;letter-spacing:-0.5px;margin-bottom:6px}
+  .subtitle{font-size:15px;color:var(--text-2);margin-bottom:4px}
+  .meta{font-size:13px;color:var(--text-3);margin-bottom:32px}
+  h2{font-size:22px;font-weight:600;margin:48px 0 18px;padding-bottom:10px;border-bottom:2px solid var(--border);letter-spacing:-0.3px}
+  h3{font-size:17px;font-weight:600;margin:28px 0 12px}
+  h4{font-size:15px;font-weight:600;margin:20px 0 8px;color:var(--text-2)}
+  p{margin-bottom:14px}
+  ul,ol{margin:0 0 16px 22px}
+  li{margin-bottom:6px}
+  table{width:100%;border-collapse:collapse;margin:16px 0;font-size:13.5px;background:var(--card);border-radius:12px;overflow:hidden;border:1px solid var(--border)}
+  th{background:#f1efe8;text-align:left;padding:11px 12px;font-weight:600;color:var(--text-2);border-bottom:1px solid var(--border-2)}
+  td{padding:10px 12px;border-bottom:1px solid var(--border);vertical-align:top}
+  tr:last-child td{border-bottom:none}
+  tr:hover td{background:#fbfbf9}
+  .tag{display:inline-block;font-size:12px;padding:2px 10px;border-radius:20px;font-weight:500}
+  .tag-teal{background:var(--teal-50);color:#085041}
+  .tag-blue{background:var(--blue-50);color:#0c447c}
+  .tag-coral{background:var(--coral-50);color:#712b13}
+  .tag-purple{background:var(--purple-50);color:#3c3489}
+  .tag-amber{background:var(--amber-50);color:#7a4f0e}
+  .tag-gray{background:#f1efe8;color:#5f5e5a}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:22px 26px;margin:16px 0}
+  .callout{border-left:3px solid var(--teal);background:var(--teal-50);padding:14px 18px;border-radius:0 10px 10px 0;margin:16px 0;font-size:14px}
+  .callout.blue{border-color:var(--blue);background:var(--blue-50)}
+  .callout.coral{border-color:var(--coral);background:var(--coral-50)}
+  .callout.amber{border-color:var(--amber);background:var(--amber-50)}
+  pre{background:var(--code-bg);color:var(--code-text);padding:18px 22px;border-radius:10px;overflow-x:auto;font-size:13px;line-height:1.65;font-family:'SF Mono','Fira Code','Cascadia Code',Consolas,monospace;margin:14px 0}
+  pre .c{color:#7f849c;font-style:italic}
+  pre .k{color:#cba6f7}
+  pre .s{color:#a6e3a1}
+  pre .t{color:#89dceb}
+  pre .n{color:#fab387}
+  code.inline{background:#f1efe8;color:#534ab7;padding:1px 6px;border-radius:4px;font-size:13px;font-family:'SF Mono',Consolas,monospace}
+  .file-path{font-size:12px;color:var(--text-3);margin-bottom:0;font-family:'SF Mono',Consolas,monospace;margin-top:14px}
+  .tree{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:18px 24px;font-family:'SF Mono',Consolas,monospace;font-size:13px;line-height:1.8;color:var(--text-2);margin:14px 0;white-space:pre;overflow-x:auto}
+  .tree .dir{color:var(--blue);font-weight:600}
+  .tree .c{color:var(--text-3)}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media(max-width:680px){.grid2{grid-template-columns:1fr}}
+  .phase-week{display:flex;gap:12px;margin:12px 0;align-items:stretch}
+  .week-tag{flex-shrink:0;width:90px;border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-weight:600;font-size:14px;color:#fff}
+  .week-content{flex:1;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px 18px}
+  .week-content ul{margin:0 0 0 18px;font-size:13.5px}
+  .footer{margin-top:48px;padding-top:24px;border-top:1px solid var(--border);font-size:13px;color:var(--text-3)}
+  b,strong{font-weight:600}
+  .toc{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:18px 24px;margin:24px 0}
+  .toc ol{margin:0 0 0 20px}
+  .toc a{color:var(--blue);text-decoration:none}
+  .toc a:hover{text-decoration:underline}
+  .ver-badge{display:inline-block;font-size:12px;padding:2px 10px;border-radius:20px;font-weight:600;background:var(--teal-50);color:#085041;margin-left:8px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>记一笔 (jiyibi) 技术架构设计 <span class="ver-badge">v2 基准</span></h1>
+<p class="subtitle">Flutter + Riverpod + drift · Android 单平台先行 · MVP 16 任务 4 周交付</p>
+<p class="meta">2026 年 7 月 · 与 CLAUDE.md / 开发任务清单 v2 完全一致</p>
+
+<div class="callout blue">
+  <strong>本文档定位</strong>：架构基准 + 关键代码范式。所有代码示例均已对齐 v2 决策（金额 int 分、records 全字段、表约束、字符串直转、预算预测整数运算）。开发时以本文档 + <code class="inline">CLAUDE.md</code> + <code class="inline">开发任务清单.html</code> 三者为准，三者内容完全一致。
+</div>
+
+<div class="toc">
+  <strong>目录</strong>
+  <ol>
+    <li><a href="#s1">技术栈选型与分阶段依赖</a></li>
+    <li><a href="#s2">Java 开发者对照速查</a></li>
+    <li><a href="#s3">分层架构详解</a></li>
+    <li><a href="#s4">项目目录结构</a></li>
+    <li><a href="#s5">数据模型与 drift 表定义</a></li>
+    <li><a href="#s6">核心代码范式</a></li>
+    <li><a href="#s7">关键技术实现</a></li>
+    <li><a href="#s8">MVP 工期排期（16+3+2）</a></li>
+    <li><a href="#s9">起步步骤</a></li>
+  </ol>
+</div>
+
+<h2 id="s1">一、技术栈选型与分阶段依赖</h2>
+
+<div class="card">
+  <h3 style="margin-top:0">一句话定调</h3>
+  <p style="font-size:17px"><b>Flutter + Riverpod + drift + fl_chart，Android 单平台先行。</b></p>
+  <p>对 Java 开发者来说，这套组合的学习成本主要在 Dart 语法（接近 Java）和 Flutter 的声明式 UI 思路。状态管理和数据层都有 Java 体系里熟悉的概念对应。</p>
+</div>
+
+<h3>为什么是 Flutter 而不是原生 Kotlin/Compose</h3>
+<table>
+  <tr><th style="width:24%">维度</th><th>Flutter（选定）</th><th>原生 Kotlin + Compose</th></tr>
+  <tr><td><b>跨平台</b></td><td>一套代码，将来上 iOS 几乎零重写</td><td>仅 Android，上 iOS 要重写整个 UI</td></tr>
+  <tr><td><b>新技术体验</b></td><td>Dart + 声明式 UI，真正不同的技术栈</td><td>只是换了语言，思路还是 Android 那套</td></tr>
+  <tr><td><b>开发体验</b></td><td>热重载（Hot Reload），改代码秒级生效</td><td>有热重载但稍慢</td></tr>
+  <tr><td><b>记账生态</b></td><td>fl_chart 等组件成熟，记账类教程多</td><td>MPAndroidChart 等成熟</td></tr>
+  <tr><td><b>学习成本</b></td><td>Dart 语法接近 Java，1-2 天可上手写页面</td><td>Kotlin 几乎零门槛</td></tr>
+</table>
+
+<div class="callout blue">
+  <strong>结论：</strong>用户"愿意尝试新技术栈"，Flutter 才是真正的技术栈切换；Kotlin/Compose 只是换语法。Flutter 的跨平台特性让"单平台先行、将来轻松补 iOS"成立，原生 Kotlin 做不到。
+</div>
+
+<h3>分阶段依赖清单</h3>
+<p><b>原则：MVP 只装 MVP 必装依赖，避免一开始引入用不上的包。</b>加固阶段在放真实数据前必须完成，V1 在 MVP 跑顺后补。</p>
+
+<table>
+  <tr><th>类别</th><th>包</th><th>版本</th><th>阶段</th><th>说明</th></tr>
+  <tr><td><b>框架</b></td><td>flutter</td><td>3.22+</td><td><span class="tag tag-teal">MVP</span></td><td>UI 框架，Dart 3.4+，minSdkVersion 21</td></tr>
+  <tr><td><b>状态管理</b></td><td>flutter_riverpod</td><td>^2.5.0</td><td><span class="tag tag-teal">MVP</span></td><td>类型安全的依赖注入 + 状态管理</td></tr>
+  <tr><td><b>数据库</b></td><td>drift</td><td>^2.16.0</td><td><span class="tag tag-teal">MVP</span></td><td>类型安全 SQLite ORM，编译期检查</td></tr>
+  <tr><td><b>数据库运行时</b></td><td>sqlite3_flutter_libs</td><td>^0.5.0</td><td><span class="tag tag-teal">MVP</span></td><td>Android 端 SQLite 原生库</td></tr>
+  <tr><td><b>数据库封装</b></td><td>drift_flutter</td><td>^0.2.0</td><td><span class="tag tag-teal">MVP</span></td><td>drift 的 Flutter 便捷封装</td></tr>
+  <tr><td><b>代码生成</b></td><td>build_runner + drift_dev</td><td>—</td><td><span class="tag tag-teal">MVP</span> dev</td><td>drift 代码生成</td></tr>
+  <tr><td><b>图表</b></td><td>fl_chart</td><td>^0.68.0</td><td><span class="tag tag-teal">MVP</span></td><td>饼图（分类占比）+ 柱状图（每日趋势）</td></tr>
+  <tr><td><b>日期/货币</b></td><td>intl</td><td>^0.19.0</td><td><span class="tag tag-teal">MVP</span></td><td>日期、货币格式化</td></tr>
+  <tr><td><b>轻量 KV</b></td><td>shared_preferences</td><td>^2.2.0</td><td><span class="tag tag-teal">MVP</span></td><td>主题选择 / 上次分类记忆</td></tr>
+  <tr><td><b>文件路径</b></td><td>path_provider</td><td>^2.1.0</td><td><span class="tag tag-teal">MVP</span></td><td>DB 路径 / CSV 导出</td></tr>
+  <tr><td><b>CSV 导出</b></td><td>csv</td><td>^6.0.0</td><td><span class="tag tag-teal">MVP</span></td><td>导出流水为 CSV</td></tr>
+  <tr><td><b>文件分享</b></td><td>share_plus</td><td>^7.0.0</td><td><span class="tag tag-teal">MVP</span></td><td>CSV 导出后分享到其他 App</td></tr>
+  <tr><td><b>单元测试</b></td><td>drift NativeDatabase.memory()</td><td>—</td><td><span class="tag tag-teal">MVP</span></td><td>内存库测试，无需额外包</td></tr>
+  <tr><td><b>文件选择</b></td><td>file_picker</td><td>^8.0.0</td><td><span class="tag tag-blue">V1</span></td><td>CSV 导入选文件</td></tr>
+  <tr><td><b>桌面 Widget</b></td><td>home_widget</td><td>^0.6.0</td><td><span class="tag tag-blue">V1</span></td><td>Android 2×2 桌面小组件</td></tr>
+  <tr><td><b>应用锁</b></td><td>local_auth</td><td>^2.2.0</td><td><span class="tag tag-amber">加固</span></td><td>指纹 / Face ID 生物识别锁</td></tr>
+</table>
+
+<div class="callout amber">
+  <strong>不在依赖清单里的：</strong>go_router（MVP 用 Navigator 简单路由够用）、flutter_secure_storage（加固阶段如需存应用锁开关状态再评估）、SQLCipher（MVP 明文，将来切加密只改 <code class="inline">_openConnection</code> 一处）。不要一开始就把所有包都装上。
+</div>
+
+<h2 id="s2">二、Java 开发者对照速查</h2>
+<p>你熟悉 Java，这套技术栈里几乎所有概念都有 Java 体系对应物。理解了对应关系，上手很快。</p>
+
+<table>
+  <tr><th>Flutter / Dart 概念</th><th>Java 对应</th><th>说明</th></tr>
+  <tr><td><code class="inline">drift Table 类</code></td><td>JPA <code class="inline">@Entity</code></td><td>定义数据库表结构，字段即列；<code class="inline">uniqueKeys</code> = 表级约束</td></tr>
+  <tr><td><code class="inline">drift Database 类</code></td><td>EntityManager / DataSource</td><td>数据库连接与操作入口</td></tr>
+  <tr><td><code class="inline">Repository</code></td><td>Spring Data Repository / DAO</td><td>封装数据访问逻辑，UI 不直接碰 Database</td></tr>
+  <tr><td><code class="inline">Riverpod Provider</code></td><td>Spring <code class="inline">@Bean</code> / <code class="inline">@Component</code></td><td>依赖注入容器，声明如何创建对象</td></tr>
+  <tr><td><code class="inline">ref.read()</code></td><td><code class="inline">@Autowired</code></td><td>从容器获取依赖</td></tr>
+  <tr><td><code class="inline">ConsumerWidget</code></td><td>带依赖注入的组件</td><td>能从容器拿 Provider 的 Widget</td></tr>
+  <tr><td><code class="inline">FutureProvider</code></td><td>异步 Service 调用 + 缓存</td><td>自动管理 loading/data/error 状态</td></tr>
+  <tr><td><code class="inline">NotifierProvider</code></td><td>有状态的 Service / ViewModel</td><td>管理可变状态，类似 MVVM 的 ViewModel</td></tr>
+  <tr><td><code class="inline">Dart Future</code></td><td>Java <code class="inline">CompletableFuture</code></td><td>异步编程，async/await</td></tr>
+  <tr><td><code class="inline">Dart Stream</code></td><td>Java <code class="inline">Flux</code> / Reactive Streams</td><td>响应式数据流，drift <code class="inline">watch()</code> 返回 Stream</td></tr>
+  <tr><td><code class="inline">Widget build()</code></td><td>模板渲染 / JSX</td><td>声明式 UI，数据变自动重建</td></tr>
+  <tr><td><code class="inline">MoneyUtils</code></td><td>工具类（静态方法）</td><td>分↔元转换，字符串直转不经 double</td></tr>
+</table>
+
+<div class="callout">
+  <strong>核心心智模型：</strong>把 Riverpod 的 Provider 想象成 Spring 的 Bean 容器，<code class="inline">ref.read()</code> 就是 <code class="inline">@Autowired</code>。Widget 不直接 new 对象，全部从容器拿。这个想通了，其余都是语法细节。
+</div>
+
+<h2 id="s3">三、分层架构详解</h2>
+
+<p>采用简化的四层架构（不过度工程化），各司其职：</p>
+
+<table>
+  <tr><th>层</th><th>职责</th><th>包含</th><th>Java 类比</th></tr>
+  <tr><td><b>Presentation</b><br><span class="tag tag-teal">UI 层</span></td><td>渲染界面、响应用户操作</td><td>Pages、Widgets、自定义组件（数字键盘、日历、预算环）</td><td>Controller + View / Thymeleaf 模板</td></tr>
+  <tr><td><b>State</b><br><span class="tag tag-blue">状态层</span></td><td>管理 UI 状态、协调业务调用</td><td>Riverpod Providers、Notifiers</td><td>ViewModel / Spring Service 调用方</td></tr>
+  <tr><td><b>Domain</b><br><span class="tag tag-purple">业务层</span></td><td>业务逻辑、校验、计算</td><td>MoneyUtils、BudgetPredictor（超支预测）、CSV 导入导出</td><td>Service / Domain Service</td></tr>
+  <tr><td><b>Data</b><br><span class="tag tag-coral">数据层</span></td><td>数据持久化与访问</td><td>Repositories、drift Database、表定义</td><td>Repository + JPA / MyBatis</td></tr>
+</table>
+
+<h3>数据流向（记一笔为例）</h3>
+<div class="card">
+<pre><span class="c">// 用户在数字键盘输入 "12.34"（字符串），选分类，点"完成"</span>
+EditorSheet (UI)
+  └─ MoneyUtils.yuanToCents("12.34") → 1234     <span class="c">// Domain 层，字符串直转，不经 double</span>
+  └─ recordNotifier.addRecord(amountCents: 1234) <span class="c">// State 层</span>
+       └─ recordRepository.insert(...)            <span class="c">// Data 层</span>
+            └─ drift INSERT INTO records ...      <span class="c">// 数据库（source='manual', sourceId=null）</span>
+       └─ 写入后 invalidate monthRecordsProvider  <span class="c">// 状态联动</span>
+            └─ 明细页、日历、预算环自动刷新        <span class="c">// UI 响应式刷新</span></pre>
+</div>
+
+<div class="callout amber">
+  <strong>个人项目原则：</strong>不要为了"架构正确"硬加 Use Case、Repository Interface 等抽象层。MVP 阶段 Provider 直接调 Repository，Repository 直接操作 drift，够用且好改。等 V2 真有复用需求再抽象。
+</div>
+
+<h2 id="s4">四、项目目录结构</h2>
+
+<p>采用 feature-first 的目录组织，与 <code class="inline">CLAUDE.md</code> 完全一致：</p>
+
+<div class="tree"><span class="dir">lib/</span>
+├── main.dart                      <span class="c"># 入口，ProviderScope</span>
+├── app.dart                       <span class="c"># MaterialApp + 主题 + 路由</span>
+├── core/
+│   ├── theme/                     <span class="c"># 5套 ThemeData + theme_provider</span>
+│   ├── constants.dart             <span class="c"># 常量（预设分类、颜色等）</span>
+│   ├── utils/
+│   │   └── money_utils.dart       <span class="c"># 分↔元转换（MVP 必做）</span>
+│   ├── logger.dart                <span class="c"># AppLogger（加固 S1，MVP 先放空壳）</span>
+│   └── providers.dart             <span class="c"># 全局 Provider 定义</span>
+├── data/
+│   ├── database/                  <span class="c"># drift AppDatabase + 表定义</span>
+│   ├── repositories/              <span class="c"># Record/Category/Budget/Account Repository</span>
+│   ├── export/                    <span class="c"># CSV 导出（MVP）</span>
+│   ├── import/                    <span class="c"># CSV 导入（V1）</span>
+│   └── backup/                    <span class="c"># 备份恢复（加固 S3）</span>
+├── presentation/
+│   ├── home/                      <span class="c"># 底部 Tab 骨架</span>
+│   ├── detail/                    <span class="c"># 明细流水页</span>
+│   ├── editor/                    <span class="c"># 记账弹层 + 数字键盘</span>
+│   ├── calendar/                  <span class="c"># 日历视图</span>
+│   ├── report/                    <span class="c"># 报表（饼图+趋势图）</span>
+│   ├── budget/                    <span class="c"># 预算设置 + 超支预测</span>
+│   └── settings/                  <span class="c"># 设置页</span>
+└── shared/
+    └── widgets/                   <span class="c"># 公共组件</span>
+
+test/
+├── core/utils/money_utils_test.dart       <span class="c"># T1.2 金额转换测试</span>
+└── data/repositories/record_repository_test.dart  <span class="c"># T1.6 Repository 测试</span></div>
+
+<h2 id="s5">五、数据模型与 drift 表定义</h2>
+
+<h3>5.1 表结构总览</h3>
+<p>4 张核心表：<b>records</b>（流水）、<b>categories</b>（分类）、<b>accounts</b>（账户）、<b>budgets</b>（预算）。</p>
+
+<table>
+  <tr><th>表</th><th>用途</th><th>关键字段</th><th>约束</th></tr>
+  <tr><td><b>records</b></td><td>流水明细</td><td>date, type, amountCents(int 分), categoryId, note, accountId, source, sourceId, merchant, createdAt, updatedAt</td><td><b>sourceId DB 唯一约束</b>（uniqueKeys={sourceId}，nullable；手记 null 不冲突，导入非空被拦截）</td></tr>
+  <tr><td><b>categories</b></td><td>收支分类</td><td>name, icon, color, type, sortOrder, archived</td><td>unique(name, type)；archived 软删除</td></tr>
+  <tr><td><b>accounts</b></td><td>资金账户</td><td>name, balanceCents(int), icon, archived</td><td>unique(name)；archived 软删除</td></tr>
+  <tr><td><b>budgets</b></td><td>预算设置</td><td>month(202607), amountCents(int), categoryId(<b>0=总预算, NOT NULL</b>)</td><td>unique(month, categoryId)（含总预算行 categoryId=0）</td></tr>
+</table>
+
+<h3>5.2 records 字段说明</h3>
+<table>
+  <tr><th>字段</th><th>类型</th><th>说明</th></tr>
+  <tr><td><code class="inline">amountCents</code></td><td>int</td><td>金额（分），始终正数。type 决定是支出还是收入。<b>禁止 double</b></td></tr>
+  <tr><td><code class="inline">type</code></td><td>text</td><td><code class="inline">'expense'</code> / <code class="inline">'income'</code>，默认 expense</td></tr>
+  <tr><td><code class="inline">source</code></td><td>text</td><td>数据来源：<code class="inline">manual</code>(手记) / <code class="inline">import</code>(导入) / <code class="inline">csv</code>(CSV导入)。默认 manual</td></tr>
+  <tr><td><code class="inline">sourceId</code></td><td>text?</td><td>去重键，<b>DB 唯一约束</b>。导入时 = <code class="inline">sha1(source|date|type|amountCents|categoryId|noteNormalized|merchantNormalized)</code>，note/merchant 规范化 = trim+lowercase，空则空串。含 type/note/merchant 避免同日同金额同分类误判。手记为 null，SQLite 中 NULL 不冲突</td></tr>
+  <tr><td><code class="inline">merchant</code></td><td>text?</td><td>商户/对方（V1 录入，MVP 可空）</td></tr>
+  <tr><td><code class="inline">updatedAt</code></td><td>DateTime</td><td>最后修改时间，编辑时必须更新</td></tr>
+</table>
+
+<h3>5.3 drift 表定义（v2 完整版）</h3>
+<p class="file-path">lib/data/database/tables.dart</p>
+<pre><span class="k">import</span> <span class="s">'package:drift/drift.dart'</span>;
+
+<span class="c">// 流水明细表 —— 类似 JPA @Entity</span>
+<span class="k">class</span> <span class="t">Records</span> <span class="k">extends</span> <span class="t">Table</span> {
+  <span class="t">IntColumn</span> <span class="k">get</span> id => integer().autoIncrement()();
+  <span class="t">DateTimeColumn</span> <span class="k">get</span> date => dateTime()();
+  <span class="t">TextColumn</span> <span class="k">get</span> type => text().withDefault(<span class="k">const</span> <span class="t">Constant</span>(<span class="s">'expense'</span>))(); <span class="c">// 'expense'|'income'</span>
+  <span class="t">IntColumn</span> <span class="k">get</span> amountCents => integer()();              <span class="c">// 金额，分，始终正数</span>
+  <span class="t">IntColumn</span> <span class="k">get</span> categoryId => integer().nullable()();
+  <span class="t">TextColumn</span> <span class="k">get</span> note => text().nullable()();
+  <span class="t">IntColumn</span> <span class="k">get</span> accountId => integer().withDefault(<span class="k">const</span> <span class="t">Constant</span>(<span class="n">1</span>))();
+  <span class="t">TextColumn</span> <span class="k">get</span> source => text().withDefault(<span class="k">const</span> <span class="t">Constant</span>(<span class="s">'manual'</span>))();  <span class="c">// manual|import|csv</span>
+  <span class="t">TextColumn</span> <span class="k">get</span> sourceId => text().nullable()();        <span class="c">// 导入去重键，DB 唯一</span>
+  <span class="t">TextColumn</span> <span class="k">get</span> merchant => text().nullable()();        <span class="c">// 商户/对方</span>
+  <span class="t">DateTimeColumn</span> <span class="k">get</span> createdAt => dateTime().withDefault(currentDateAndTime)();
+  <span class="t">DateTimeColumn</span> <span class="k">get</span> updatedAt => dateTime().withDefault(currentDateAndTime)();
+
+  <span class="at">@override</span>
+  List&lt;<span class="t">Set</span>&lt;<span class="t">Column</span>&gt;&gt; <span class="k">get</span> uniqueKeys =&gt; [{sourceId}]; <span class="c">// DB 层去重兜底</span>
+}
+
+<span class="k">class</span> <span class="t">Categories</span> <span class="k">extends</span> <span class="t">Table</span> {
+  <span class="t">IntColumn</span> <span class="k">get</span> id => integer().autoIncrement()();
+  <span class="t">TextColumn</span> <span class="k">get</span> name => text().withLength(min: <span class="n">1</span>, max: <span class="n">20</span>)();
+  <span class="t">TextColumn</span> <span class="k">get</span> icon => text()();                  <span class="c">// 图标标识</span>
+  <span class="t">IntColumn</span> <span class="k">get</span> color => integer().withDefault(<span class="k">const</span> <span class="t">Constant</span>(<span class="n">0xFF1D9E75</span>))();  <span class="c">// ARGB 值，对应 Flutter Color(0xFF1D9E75)</span>
+  <span class="t">TextColumn</span> <span class="k">get</span> type => text().withDefault(<span class="k">const</span> <span class="t">Constant</span>(<span class="s">'expense'</span>))();
+  <span class="t">IntColumn</span> <span class="k">get</span> sortOrder => integer().withDefault(<span class="k">const</span> <span class="t">Constant</span>(<span class="n">0</span>))();
+  <span class="t">BoolColumn</span> <span class="k">get</span> archived => boolean().withDefault(<span class="k">const</span> <span class="t">Constant</span>(<span class="k">false</span>))();
+
+  <span class="at">@override</span>
+  List&lt;<span class="t">Set</span>&lt;<span class="t">Column</span>&gt;&gt; <span class="k">get</span> uniqueKeys =&gt; [{name, type}]; <span class="c">// 同名同类型唯一</span>
+}
+
+<span class="k">class</span> <span class="t">Accounts</span> <span class="k">extends</span> <span class="t">Table</span> {
+  <span class="t">IntColumn</span> <span class="k">get</span> id => integer().autoIncrement()();
+  <span class="t">TextColumn</span> <span class="k">get</span> name => text().withLength(min: <span class="n">1</span>, max: <span class="n">20</span>)();
+  <span class="t">IntColumn</span> <span class="k">get</span> balanceCents => integer().withDefault(<span class="k">const</span> <span class="t">Constant</span>(<span class="n">0</span>))();  <span class="c">// 余额，分</span>
+  <span class="t">TextColumn</span> <span class="k">get</span> icon => text().withDefault(<span class="k">const</span> <span class="t">Constant</span>(<span class="s">'💰'</span>))();
+  <span class="t">BoolColumn</span> <span class="k">get</span> archived => boolean().withDefault(<span class="k">const</span> <span class="t">Constant</span>(<span class="k">false</span>))();
+
+  <span class="at">@override</span>
+  List&lt;<span class="t">Set</span>&lt;<span class="t">Column</span>&gt;&gt; <span class="k">get</span> uniqueKeys =&gt; [{name}];
+}
+
+<span class="k">class</span> <span class="t">Budgets</span> <span class="k">extends</span> <span class="t">Table</span> {
+  <span class="t">IntColumn</span> <span class="k">get</span> id => integer().autoIncrement()();
+  <span class="t">IntColumn</span> <span class="k">get</span> month => integer()();                    <span class="c">// 202607</span>
+  <span class="t">IntColumn</span> <span class="k">get</span> amountCents => integer()();              <span class="c">// 预算，分</span>
+  <span class="t">IntColumn</span> <span class="k">get</span> categoryId => integer().withDefault(<span class="k">const</span> <span class="t">Constant</span>(<span class="n">0</span>))();  <span class="c">// 0=总预算；真实分类 id 从 1 开始</span>
+
+  <span class="at">@override</span>
+  List&lt;<span class="t">Set</span>&lt;<span class="t">Column</span>&gt;&gt; <span class="k">get</span> uniqueKeys =&gt; [{month, categoryId}]; <span class="c">// 含总预算(categoryId=0)</span>
+}</pre>
+
+<div class="callout coral">
+  <strong>为什么预算表 categoryId 用 0 而不是 null：</strong>SQLite 中 NULL 在 UNIQUE 约束里<b>不冲突</b>——多条 <code class="inline">categoryId=null</code> 的总预算行能共存，约束形同虚设。用 0（NOT NULL DEFAULT 0）后，真实分类 id 从 1 开始不冲突，unique(month, categoryId) 对<b>所有行</b>生效。
+</div>
+
+<h3>5.4 Database 定义 + 初始化数据</h3>
+<p class="file-path">lib/data/database/database.dart</p>
+<pre><span class="k">import</span> <span class="s">'dart:io'</span>;
+<span class="k">import</span> <span class="s">'package:drift/drift.dart'</span>;
+<span class="k">import</span> <span class="s">'package:drift/native.dart'</span>;
+<span class="k">import</span> <span class="s">'package:path/path.dart'</span> <span class="k">as</span> p;
+<span class="k">import</span> <span class="s">'package:path_provider/path_provider.dart'</span>;
+<span class="k">import</span> <span class="s">'tables.dart'</span>;
+
+<span class="k">part</span> <span class="s">'database.g.dart'</span>;  <span class="c">// build_runner 生成</span>
+
+<span class="at">@DriftDatabase</span>(tables: [<span class="t">Records</span>, <span class="t">Categories</span>, <span class="t">Accounts</span>, <span class="t">Budgets</span>])
+<span class="k">class</span> <span class="t">AppDatabase</span> <span class="k">extends</span> _$AppDatabase {
+  <span class="t">AppDatabase</span>() : <span class="k">super</span>(_openConnection());
+
+  <span class="at">@override</span>
+  <span class="k">int</span> <span class="k">get</span> schemaVersion =&gt; <span class="n">1</span>;
+
+  <span class="at">@override</span>
+  MigrationStrategy <span class="k">get</span> migration =&gt; MigrationStrategy(
+    onCreate: (m) <span class="k">async</span> {
+      <span class="k">await</span> m.createAll();
+      <span class="k">await</span> _seedDefaults();  <span class="c">// 插入默认分类和账户</span>
+    },
+  );
+
+  <span class="c">// 默认数据：8 支出分类 + 3 收入分类 + 1 个「现金」账户</span>
+  <span class="t">Future</span>&lt;<span class="k">void</span>&gt; _seedDefaults() <span class="k">async</span> {
+    <span class="k">await</span> batch((b) =&gt; b.insertAll(categories, [
+      <span class="t">CategoriesCompanion</span>.insert(name: <span class="s">'餐饮'</span>, icon: <span class="s">'餐'</span>, color: <span class="t">Value</span>(<span class="n">0xFFBA7517</span>), type: <span class="t">Value</span>(<span class="s">'expense'</span>), sortOrder: <span class="t">Value</span>(<span class="n">1</span>)),
+      <span class="t">CategoriesCompanion</span>.insert(name: <span class="s">'交通'</span>, icon: <span class="s">'交'</span>, color: <span class="t">Value</span>(<span class="n">0xFF185FA5</span>), type: <span class="t">Value</span>(<span class="s">'expense'</span>), sortOrder: <span class="t">Value</span>(<span class="n">2</span>)),
+      <span class="c">// ... 购物/娱乐/医疗/居家/学习/其他</span>
+      <span class="t">CategoriesCompanion</span>.insert(name: <span class="s">'工资'</span>, icon: <span class="s">'资'</span>, color: <span class="t">Value</span>(<span class="n">0xFF3B6D11</span>), type: <span class="t">Value</span>(<span class="s">'income'</span>), sortOrder: <span class="t">Value</span>(<span class="n">1</span>)),
+      <span class="c">// ... 兼职/其他收入</span>
+    ]));
+    <span class="k">await</span> into(accounts).insert(<span class="t">AccountsCompanion</span>.insert(name: <span class="s">'现金'</span>));
+  }
+}
+
+<span class="t">LazyDatabase</span> _openConnection() {
+  <span class="k">return</span> <span class="t">LazyDatabase</span>(() <span class="k">async</span> {
+    <span class="k">final</span> dir = <span class="k">await</span> getApplicationDocumentsDirectory();
+    <span class="k">final</span> file = <span class="t">File</span>(p.join(dir.path, <span class="s">'jiyibi.db'</span>));
+    <span class="c">// MVP 明文；将来切 SQLCipher 只改这一处 NativeDatabase → SQLCipher</span>
+    <span class="k">return</span> <span class="t">NativeDatabase</span>(file);
+  });
+}</pre>
+
+<h2 id="s6">六、核心代码范式</h2>
+
+<h3>6.1 MoneyUtils —— 金额转换（字符串直转，不经 double）</h3>
+<p class="file-path">lib/core/utils/money_utils.dart</p>
+<pre><span class="c">/// 金额工具：输入元字符串、存储 int 分、显示元字符串。</span>
+<span class="c">/// 全程不经 double，彻底杜绝浮点精度问题。</span>
+<span class="k">class</span> <span class="t">MoneyUtils</span> {
+  <span class="c">/// 分 → 显示字符串：1234 → "¥12.34" / -123456 → "-¥1,234.56"</span>
+  <span class="k">static</span> <span class="t">String</span> formatYuan(<span class="k">int</span> cents) {
+    <span class="k">final</span> neg = cents &lt; <span class="n">0</span>;
+    <span class="k">final</span> abs = cents.abs();
+    <span class="k">final</span> yuan = abs ~/ <span class="n">100</span>;
+    <span class="k">final</span> frac = abs % <span class="n">100</span>;
+    <span class="k">final</span> yuanStr = yuan.toString().replaceAllMapped(
+      <span class="t">RegExp</span>(<span class="s">r'(\d)(?=(\d{3})+$)'</span>), (m) =&gt; <span class="s">'${m[1]},'</span>);
+    <span class="k">return</span> <span class="s">'${neg ? '-' : ''}¥$yuanStr.${frac.toString().padLeft(2, '0')}'</span>;
+  }
+
+  <span class="c">/// 元字符串 → 分：不经 double，字符串直转。</span>
+  <span class="c">/// "12.34"→1234 / "12.3"→1230 / "12"→1200 / ""→0 / "-12.34"→-1234</span>
+  <span class="c">/// 小数超两位截断（不四舍五入）；非法格式（多小数点/非数字字符）返回 0</span>
+  <span class="k">static</span> <span class="k">int</span> yuanToCents(<span class="t">String</span> yuan) {
+    <span class="k">final</span> s = yuan.trim();
+    <span class="k">if</span> (s.isEmpty) <span class="k">return</span> <span class="n">0</span>;
+    <span class="k">var</span> neg = <span class="k">false</span>;
+    <span class="k">var</span> body = s;
+    <span class="k">if</span> (body.startsWith(<span class="s">'-'</span>)) { neg = <span class="k">true</span>; body = body.substring(<span class="n">1</span>); }
+    <span class="k">else if</span> (body.startsWith(<span class="s">'+'</span>)) { body = body.substring(<span class="n">1</span>); }
+    <span class="k">if</span> (body.isEmpty) <span class="k">return</span> <span class="n">0</span>;
+    <span class="c">// 非法格式：含非数字字符或多个小数点</span>
+    <span class="k">if</span> (!<span class="t">RegExp</span>(<span class="s">r'^\d*\.?\d*$'</span>).hasMatch(body)) <span class="k">return</span> <span class="n">0</span>;
+    <span class="k">final</span> dot = body.indexOf(<span class="s">'.'</span>);
+    <span class="k">int</span> yuanInt, fracInt;
+    <span class="k">if</span> (dot &lt; <span class="n">0</span>) {
+      yuanInt = <span class="k">int</span>.parse(body);             <span class="c">// 已验证纯数字</span>
+      fracInt = <span class="n">0</span>;
+    } <span class="k">else</span> {
+      <span class="k">final</span> yuanPart = body.substring(<span class="n">0</span>, dot);
+      <span class="k">var</span> fracPart = body.substring(dot + <span class="n">1</span>);
+      yuanInt = yuanPart.isEmpty ? <span class="n">0</span> : <span class="k">int</span>.parse(yuanPart);
+      <span class="k">if</span> (fracPart.length &gt; <span class="n">2</span>) fracPart = fracPart.substring(<span class="n">0</span>, <span class="n">2</span>);  <span class="c">// 截断到两位</span>
+      fracPart = fracPart.padRight(<span class="n">2</span>, <span class="s">'0'</span>);                          <span class="c">// "3" → "30"</span>
+      fracInt = <span class="k">int</span>.parse(fracPart);
+    }
+    <span class="k">final</span> cents = yuanInt * <span class="n">100</span> + fracInt;
+    <span class="k">return</span> neg ? -cents : cents;
+  }
+}</pre>
+
+<div class="callout">
+  <strong>为什么字符串直转：</strong>数字键盘全程是字符串累积（点 "1""2"".""3""4" → "12.34"），最后一次性 <code class="inline">yuanToCents("12.34")</code> 转 1234。旧方案 <code class="inline">(double * 100).round()</code> 经过浮点表示，极端值有精度漂移。字符串拆整数/小数部分直转 <code class="inline">12*100+34=1234</code> 彻底杜绝。
+</div>
+
+<h3>6.2 RecordRepository —— 数据访问层（int 分）</h3>
+<p class="file-path">lib/data/repositories/record_repository.dart</p>
+<pre><span class="k">import</span> <span class="s">'package:drift/drift.dart'</span>;
+<span class="k">import</span> <span class="s">'../database/database.dart'</span>;
+
+<span class="c">// 类似 Spring Data Repository / DAO</span>
+<span class="k">class</span> <span class="t">RecordRepository</span> {
+  <span class="k">final</span> <span class="t">AppDatabase</span> _db;
+  <span class="t">RecordRepository</span>(<span class="k">this</span>._db);
+
+  <span class="c">// 新增手记 —— amountCents 是 int 分，不是 double</span>
+  <span class="t">Future</span>&lt;<span class="k">int</span>&gt; insert({
+    <span class="k">required</span> <span class="t">DateTime</span> date,
+    <span class="k">required</span> <span class="t">String</span> type,         <span class="c">// 'expense'|'income'</span>
+    <span class="k">required</span> <span class="k">int</span> amountCents,    <span class="c">// 分</span>
+    <span class="k">int</span>? categoryId,
+    <span class="t">String</span>? note,
+    <span class="k">int</span> accountId = <span class="n">1</span>,
+    <span class="t">String</span> source = <span class="s">'manual'</span>,
+    <span class="t">String</span>? sourceId,        <span class="c">// 手记传 null</span>
+    <span class="t">String</span>? merchant,
+  }) {
+    <span class="k">return</span> _db.into(_db.records).insert(<span class="t">RecordsCompanion</span>.insert(
+      date: date,
+      type: <span class="t">Value</span>(type),
+      amountCents: amountCents,
+      categoryId: <span class="t">Value</span>(categoryId),
+      note: <span class="t">Value</span>(note),
+      accountId: <span class="t">Value</span>(accountId),
+      source: <span class="t">Value</span>(source),
+      sourceId: <span class="t">Value</span>(sourceId),
+      merchant: <span class="t">Value</span>(merchant),
+    ));
+  }
+
+  <span class="c">// 编辑 —— 必须更新 updatedAt；返回受影响行数（drift update().write() 返回 int）</span>
+  <span class="t">Future</span>&lt;<span class="k">int</span>&gt; updateRecord(<span class="k">int</span> id, <span class="t">RecordsCompanion</span> patch) {
+    <span class="k">return</span> (_db.update(_db.records)..where((r) =&gt; r.id.equals(id)))
+      .write(patch.copyWith(updatedAt: <span class="t">Value</span>(<span class="t">DateTime</span>.now())));
+  }
+
+  <span class="c">// 查某月记录 —— 半开区间 [start, nextMonthStart)</span>
+  <span class="t">Future</span>&lt;<span class="t">List</span>&lt;<span class="t">Record</span>&gt;&gt; getMonthRecords(<span class="t">DateTime</span> month) {
+    <span class="k">final</span> start = <span class="t">DateTime</span>(month.year, month.month, <span class="n">1</span>);
+    <span class="k">final</span> nextMonthStart = <span class="t">DateTime</span>(month.year, month.month + <span class="n">1</span>, <span class="n">1</span>);
+    <span class="k">return</span> (_db.select(_db.records)
+          ..where((r) =&gt; r.date.isBiggerOrEqualValue(start) &amp;
+                         r.date.isSmallerValue(nextMonthStart))
+          ..orderBy([(r) =&gt; <span class="t">OrderingTerm</span>.desc(r.date)]))
+        .get();
+  }
+
+  <span class="c">// 当月支出总额 —— 整数 SUM，结果 int，绝不转 double</span>
+  <span class="t">Future</span>&lt;<span class="k">int</span>&gt; getMonthExpenseCents(<span class="t">DateTime</span> month) <span class="k">async</span> {
+    <span class="k">final</span> start = <span class="t">DateTime</span>(month.year, month.month, <span class="n">1</span>);
+    <span class="k">final</span> nextMonthStart = <span class="t">DateTime</span>(month.year, month.month + <span class="n">1</span>, <span class="n">1</span>);
+    <span class="c">// 半开区间 [start, nextMonthStart)</span>
+    <span class="k">final</span> query = _db.selectOnly(_db.records)
+      ..addColumns([_db.records.amountCents.sum()])
+      ..where(_db.records.type.equals(<span class="s">'expense'</span>) &amp;
+              _db.records.date.isBiggerOrEqualValue(start) &amp;
+              _db.records.date.isSmallerValue(nextMonthStart));
+    <span class="k">final</span> row = <span class="k">await</span> query.getSingle();
+    <span class="k">return</span> row.read(_db.records.amountCents.sum()) ?? <span class="n">0</span>;
+  }
+
+  <span class="c">// 批量导入去重 —— 性能优化（先查已有 sourceId 集合过滤）；DB 唯一约束兜底</span>
+  <span class="t">Future</span>&lt;(<span class="k">int</span> inserted, <span class="k">int</span> skipped)&gt; batchInsertIfNew(
+      <span class="t">List</span>&lt;<span class="t">RecordsCompanion</span>&gt; rows) <span class="k">async</span> {
+    <span class="c">// 提取非空 sourceId，批量查已有集合（避免逐条查询）</span>
+    <span class="k">final</span> sourceIds = rows.map((r) =&gt; r.sourceId.value).whereType&lt;<span class="t">String</span>&gt;().toSet();
+    <span class="k">final</span> existing = sourceIds.isEmpty
+        ? &lt;<span class="t">String</span>&gt;{}
+        : (await (_db.select(_db.records)
+              ..where((r) =&gt; r.sourceId.isIn(sourceIds)))
+            .map((r) =&gt; r.sourceId).get())
+            .whereType&lt;<span class="t">String</span>&gt;().toSet();
+    <span class="k">final</span> toInsert = rows.where((r) =&gt;
+        r.sourceId.value == <span class="k">null</span> || !existing.contains(r.sourceId.value)).toList();
+    <span class="k">await</span> _db.batch((b) =&gt; b.insertAll(_db.records, toInsert));
+    <span class="k">return</span> (toInsert.length, rows.length - toInsert.length);
+  }
+
+  <span class="t">Future</span>&lt;<span class="k">int</span>&gt; deleteRecord(<span class="k">int</span> id) =&gt;
+      (_db.delete(_db.records)..where((r) =&gt; r.id.equals(id))).go();
+}</pre>
+
+<h3>6.3 Riverpod Provider —— 状态 + 依赖注入</h3>
+<p class="file-path">lib/core/providers.dart</p>
+<pre><span class="k">import</span> <span class="s">'package:flutter_riverpod/flutter_riverpod.dart'</span>;
+<span class="k">import</span> <span class="s">'../data/database/database.dart'</span>;
+<span class="k">import</span> <span class="s">'../data/repositories/record_repository.dart'</span>;
+
+<span class="c">// 依赖注入 —— Provider 类似 Spring @Bean</span>
+<span class="k">final</span> databaseProvider = <span class="t">Provider</span>((ref) =&gt; <span class="t">AppDatabase</span>());
+<span class="k">final</span> recordRepositoryProvider = <span class="t">Provider</span>(
+  (ref) =&gt; <span class="t">RecordRepository</span>(ref.read(databaseProvider)),
+);
+
+<span class="c">// 当前月份状态（明细/日历/报表共用）</span>
+<span class="k">final</span> currentMonthProvider = <span class="t">StateProvider</span>&lt;<span class="t">DateTime</span>&gt;((ref) =&gt; <span class="t">DateTime</span>.now());
+
+<span class="c">// 当月记录 —— ref.read() 类似 @Autowired</span>
+<span class="k">final</span> monthRecordsProvider = <span class="t">FutureProvider</span>.family&lt;<span class="t">List</span>&lt;<span class="t">Record</span>&gt;, <span class="t">DateTime</span>&gt;(
+  (ref, month) =&gt; ref.read(recordRepositoryProvider).getMonthRecords(month),
+);
+
+<span class="c">// 当月收支汇总 —— 全 int 分</span>
+<span class="k">final</span> monthSummaryProvider = <span class="t">FutureProvider</span>.family&lt;<span class="t">MonthSummary</span>, <span class="t">DateTime</span>&gt;(
+  (ref, month) <span class="k">async</span> {
+    <span class="k">final</span> repo = ref.read(recordRepositoryProvider);
+    <span class="k">final</span> expense = <span class="k">await</span> repo.getMonthExpenseCents(month);
+    <span class="c">// income 同理...</span>
+    <span class="k">return</span> <span class="t">MonthSummary</span>(expenseCents: expense, incomeCents: <span class="n">0</span>);
+  },
+);
+
+<span class="k">class</span> <span class="t">MonthSummary</span> {
+  <span class="k">final</span> <span class="k">int</span> expenseCents, incomeCents;
+  <span class="t">MonthSummary</span>({<span class="k">required</span> <span class="k">this</span>.expenseCents, <span class="k">required</span> <span class="k">this</span>.incomeCents});
+  <span class="k">int</span> <span class="k">get</span> balanceCents =&gt; incomeCents - expenseCents;
+}</pre>
+
+<h3>6.4 BudgetPredictor —— 超支预测（整数运算）</h3>
+<p class="file-path">lib/core/budget_predictor.dart</p>
+<pre><span class="c">/// 预算超支预测 —— 补鲨鱼记账最大缺口。全程 int 分整数运算。</span>
+<span class="k">class</span> <span class="t">BudgetPredictor</span> {
+  <span class="c">/// 预测月末总支出（分）</span>
+  <span class="c">/// 逻辑：已用 / 已过天数 * 当月总天数</span>
+  <span class="k">static</span> <span class="k">int</span> predictMonthEndCents({
+    <span class="k">required</span> <span class="k">int</span> usedCents,
+    <span class="k">required</span> <span class="t">DateTime</span> now,
+  }) {
+    <span class="k">final</span> dayOfMonth = now.day;                       <span class="c">// 已过天数（含今天）</span>
+    <span class="k">final</span> daysInMonth = <span class="t">DateTime</span>(now.year, now.month + <span class="n">1</span>, <span class="n">0</span>).day;
+    <span class="k">if</span> (dayOfMonth == <span class="n">0</span>) <span class="k">return</span> <span class="n">0</span>;
+    <span class="c">// 整数运算：usedCents * daysInMonth / dayOfMonth</span>
+    <span class="k">return</span> (usedCents * daysInMonth) ~/ dayOfMonth;
+  }
+
+  <span class="c">/// 日均建议（分）：(预算 - 已用) / 剩余天数</span>
+  <span class="k">static</span> <span class="k">int</span>? dailySuggestionCents({
+    <span class="k">required</span> <span class="k">int</span> budgetCents,
+    <span class="k">required</span> <span class="k">int</span> usedCents,
+    <span class="k">required</span> <span class="t">DateTime</span> now,
+  }) {
+    <span class="k">final</span> daysInMonth = <span class="t">DateTime</span>(now.year, now.month + <span class="n">1</span>, <span class="n">0</span>).day;
+    <span class="k">final</span> remainingDays = daysInMonth - now.day + <span class="n">1</span>;
+    <span class="k">if</span> (remainingDays &lt;= <span class="n">0</span>) <span class="k">return</span> <span class="k">null</span>;
+    <span class="k">final</span> remaining = budgetCents - usedCents;
+    <span class="k">return</span> remaining ~/ remainingDays;
+  }
+
+  <span class="c">/// 是否超支预测</span>
+  <span class="k">static</span> <span class="k">bool</span> willExceed({<span class="k">required</span> <span class="k">int</span> predictedCents, <span class="k">required</span> <span class="k">int</span> budgetCents}) =&gt;
+      predictedCents &gt; budgetCents;
+}</pre>
+
+<h3>6.5 UI 消费 Provider（明细页示例）</h3>
+<p class="file-path">lib/presentation/detail/detail_page.dart</p>
+<pre><span class="k">import</span> <span class="s">'package:flutter/material.dart'</span>;
+<span class="k">import</span> <span class="s">'package:flutter_riverpod/flutter_riverpod.dart'</span>;
+<span class="k">import</span> <span class="s">'../../core/providers.dart'</span>;
+<span class="k">import</span> <span class="s">'../../core/utils/money_utils.dart'</span>;
+
+<span class="c">// ConsumerWidget = 能用 ref 的 Widget，类似带 @Autowired 的组件</span>
+<span class="k">class</span> <span class="t">DetailPage</span> <span class="k">extends</span> <span class="t">ConsumerWidget</span> {
+  <span class="k">const</span> <span class="t">DetailPage</span>({<span class="k">super</span>.key});
+
+  <span class="at">@override</span>
+  <span class="t">Widget</span> build(<span class="t">BuildContext</span> context, <span class="t">WidgetRef</span> ref) {
+    <span class="k">final</span> month = ref.watch(currentMonthProvider);
+    <span class="k">final</span> summaryAsync = ref.watch(monthSummaryProvider(month));
+
+    <span class="k">return</span> <span class="t">Scaffold</span>(
+      appBar: <span class="t">AppBar</span>(title: <span class="k">const</span> <span class="t">Text</span>(<span class="s">'明细'</span>)),
+      body: summaryAsync.when(
+        loading: () =&gt; <span class="k">const</span> <span class="t">Center</span>(child: <span class="t">CircularProgressIndicator</span>()),
+        error: (e, _) =&gt; <span class="t">Center</span>(child: <span class="t">Text</span>(<span class="s">'出错了: $e'</span>)),
+        data: (summary) =&gt; <span class="t">Column</span>(children: [
+          <span class="c">// 显示用 MoneyUtils.formatYuan，不经 double</span>
+          <span class="t">Text</span>(<span class="s">'支出 </span><span class="n">${MoneyUtils.formatYuan(summary.expenseCents)}</span><span class="s">'</span>),
+          <span class="t">Text</span>(<span class="s">'结余 </span><span class="n">${MoneyUtils.formatYuan(summary.balanceCents)}</span><span class="s">'</span>),
+        ]),
+      ),
+    );
+  }
+}</pre>
+
+<div class="callout">
+  <strong>UI 层金额显示的唯一正确方式：</strong><code class="inline">MoneyUtils.formatYuan(cents)</code>。禁止 <code class="inline">toStringAsFixed</code>、禁止 <code class="inline">/ 100</code> 转 double 再拼字符串。全局搜 <code class="inline">toStringAsFixed</code> 和 <code class="inline">/ 100</code> 确认无残留。
+</div>
+
+<h2 id="s7">七、关键技术实现</h2>
+
+<div class="grid2">
+  <div class="card">
+    <h4>极速记账（3 秒目标）</h4>
+    <ul>
+      <li>底部 + 按钮弹出记账面板，不跳页</li>
+      <li>自定义数字键盘，字符串累积金额</li>
+      <li>完成时 <code class="inline">yuanToCents("12.34")</code> 一次性转分</li>
+      <li>常用分类按使用频率排序</li>
+      <li><b>V1</b>：桌面 Widget + Deep Link 直达记账面板</li>
+    </ul>
+  </div>
+  <div class="card">
+    <h4>预算超支预测（差异化核心）</h4>
+    <ul>
+      <li>记账后 <code class="inline">monthSummaryProvider</code> 失效重算</li>
+      <li><code class="inline">BudgetPredictor</code> 按日均推算月末总额</li>
+      <li>超支显示预测金额 + 日均建议</li>
+      <li>全程 int 分整数运算，无浮点</li>
+      <li>补鲨鱼记账最大缺口，重点做好</li>
+    </ul>
+  </div>
+  <div class="card">
+    <h4>数据加密演进</h4>
+    <ul>
+      <li><b>MVP</b>：NativeDatabase 明文，先跑通</li>
+      <li>将来切 SQLCipher 只改 <code class="inline">_openConnection</code> 一处</li>
+      <li>不要一开始就上加密，增加调试成本</li>
+      <li>加固阶段先做应用锁 + 日志脱敏</li>
+    </ul>
+  </div>
+  <div class="card">
+    <h4>分类记忆</h4>
+    <ul>
+      <li>记录每分类使用次数 + 最近使用时间</li>
+      <li>记账页分类按"频率×最近"排序</li>
+      <li>V2 升级为规则匹配（备注关键词→分类）</li>
+      <li>减少手动选择成本</li>
+    </ul>
+  </div>
+</div>
+
+<h3>隐私策略（加固阶段，正式自用前必做）</h3>
+<div class="callout coral">
+  <strong>⚠️ 正式放入真实记账数据前，S1-S3 必须就位。</strong>MVP 可用测试数据验证，但真实数据需要隐私保护。
+</div>
+<table>
+  <tr><th>任务</th><th>内容</th><th>阶段</th></tr>
+  <tr><td><b>S1 日志规范</b></td><td>AppLogger 封装，禁止直接 print；日志不含金额/备注/商户/sourceId；release 关闭 debug 日志</td><td><span class="tag tag-amber">加固</span></td></tr>
+  <tr><td><b>S2 应用锁</b></td><td>local_auth 生物识别；启动 + 后台回前台校验；开关持久化</td><td><span class="tag tag-amber">加固</span></td></tr>
+  <tr><td><b>S3 备份保护</b></td><td>备份文件不明文落公开目录；导出/恢复需应用锁校验；恢复前二次确认</td><td><span class="tag tag-amber">加固</span></td></tr>
+</table>
+
+<h2 id="s8">八、MVP 工期排期（16+3+2）</h2>
+
+<p>按每天投入 2-3 小时、单人开发估算，<b>4 周</b>完成 MVP（16 个任务）。核心策略：先数据后界面，先跑通后打磨。详细任务规格见 <code class="inline">记账App开发任务清单.html</code>。</p>
+
+<div class="phase-week">
+  <div class="week-tag" style="background:#1d9e75">第1周<br><span style="font-size:11px;font-weight:400">骨架+数据</span></div>
+  <div class="week-content">
+    <strong>目标：搭好骨架，数据层可读写 + 单元测试</strong>
+    <ul>
+      <li><b>T1.1</b> flutter create + 依赖配置（只装 MVP 必装）</li>
+      <li><b>T1.2</b> 目录结构 + 5 套主题 + MoneyUtils（字符串直转）</li>
+      <li><b>T1.3</b> drift 4 张表定义（v2 全字段+约束）+ 代码生成 + 默认数据</li>
+      <li><b>T1.4</b> Repository 层（int 分 + batchInsertIfNew + updatedAt）</li>
+      <li><b>T1.5</b> Provider 装配 + 数据层联调验证</li>
+      <li><b>T1.6</b> Repository 单元测试（内存库）<span class="tag tag-teal">里程碑</span></li>
+    </ul>
+  </div>
+</div>
+
+<div class="phase-week">
+  <div class="week-tag" style="background:#378add">第2周<br><span style="font-size:11px;font-weight:400">记账核心</span></div>
+  <div class="week-content">
+    <strong>目标：能完整记一笔账 + 编辑删除</strong>
+    <ul>
+      <li><b>T2.1</b> 明细流水页（月份切换 + 按日分组 + 左滑删除）</li>
+      <li><b>T2.2</b> 记账弹层（数字键盘字符串输入 + 分类选择 + 3 秒记账）</li>
+      <li><b>T2.3</b> 记录编辑 + 详情（复用 editor_sheet）<span class="tag tag-blue">里程碑</span></li>
+    </ul>
+  </div>
+</div>
+
+<div class="phase-week">
+  <div class="week-tag" style="background:#7f77dd">第3周<br><span style="font-size:11px;font-weight:400">预算+日历+报表</span></div>
+  <div class="week-content">
+    <strong>目标：差异化功能上线</strong>
+    <ul>
+      <li><b>T3.1</b> 预算设置页（总预算+分类预算，upsert，环形进度）</li>
+      <li><b>T3.2</b> 预算超支预测（BudgetPredictor 整数运算）<span class="tag tag-purple">差异化</span></li>
+      <li><b>T3.3</b> 日历视图（月历网格 + 每日支出 + 点击看明细）</li>
+      <li><b>T3.4</b> 报表页（fl_chart 饼图 + 柱状图）<span class="tag tag-purple">里程碑</span></li>
+    </ul>
+  </div>
+</div>
+
+<div class="phase-week">
+  <div class="week-tag" style="background:#d85a30">第4周<br><span style="font-size:11px;font-weight:400">设置+导出+打包</span></div>
+  <div class="week-content">
+    <strong>目标：MVP 可用</strong>
+    <ul>
+      <li><b>T4.1</b> 我的/设置页（主题切换 + 分类/账户管理入口）</li>
+      <li><b>T4.2</b> CSV 导出（csv 包 + share_plus 分享）</li>
+      <li><b>T4.3</b> 整体测试 + 打磨 + Release 构建 <span class="tag tag-coral">MVP 完成</span></li>
+    </ul>
+  </div>
+</div>
+
+<h3>后续阶段</h3>
+<table>
+  <tr><th>阶段</th><th>任务</th><th>说明</th></tr>
+  <tr><td><b>上线前加固</b></td><td>S1 日志规范 → S2 应用锁 → S3 备份保护</td><td><span class="tag tag-amber">正式自用前必做</span></td></tr>
+  <tr><td><b>V1 迭代</b></td><td>V1.1 CSV 导入（鲨鱼迁移）| V1.2 桌面 Widget</td><td><span class="tag tag-blue">MVP 跑顺后</span></td></tr>
+</table>
+
+<h2 id="s9">九、起步步骤</h2>
+
+<h3>环境搭建（T1.1）</h3>
+<pre><span class="c"># 1. 安装 Flutter SDK</span>
+brew install --cask flutter
+
+<span class="c"># 2. 验证环境</span>
+flutter doctor
+
+<span class="c"># 3. 创建项目（Android 单平台先行）</span>
+flutter create --org com.yourname --platforms android jiyibi
+<span class="k">cd</span> jiyibi
+
+<span class="c"># 4. 添加 MVP 必装依赖（不要一次装全所有包）</span>
+flutter pub add flutter_riverpod drift sqlite3_flutter_libs drift_flutter \
+  fl_chart intl shared_preferences path_provider csv share_plus
+
+<span class="c"># 5. 添加开发依赖（代码生成）</span>
+flutter pub add --dev build_runner drift_dev
+
+<span class="c"># 6. 写好 tables.dart + database.dart 后，生成代码</span>
+dart run build_runner build --delete-conflicting-outputs
+
+<span class="c"># 7. 跑起来</span>
+flutter run</pre>
+
+<div class="callout amber">
+  <strong>V1 / 加固阶段再装的包：</strong>V1 加 <code class="inline">file_picker home_widget</code>；加固加 <code class="inline">local_auth</code>。MVP 阶段不要提前装。
+</div>
+
+<h3>第一个里程碑验证（第1周末，T1.6）</h3>
+<div class="callout">
+  第 1 周结束时，你应该能用 <code class="inline">flutter test</code> 跑通 Repository 单元测试：insert → 查询 → 按月汇总 → batchInsertIfNew 去重 → updatedAt 更新。数据层有测试安全网，后面改 UI 时数据层逻辑有保障。
+</div>
+
+<h3>开发节奏建议</h3>
+<ul>
+  <li><b>每个功能先写 Repository + 测试</b>，再写 Provider，最后写 UI。数据对了 UI 才有意义。</li>
+  <li><b>用 Flutter 热重载</b>调 UI，保存即生效，不用重启 App。</li>
+  <li><b>第 4 周务必用自己的真实场景测</b>，连续记一周账，所有"不顺手"的地方都记下来迭代。</li>
+  <li><b>每个 Task 完成后单独 commit</b>，格式: <code class="inline">feat(T1.3): drift数据库定义</code>。</li>
+  <li><b>不要碰云同步</b>，那是 V1 的事。MVP 数据全在本地。</li>
+</ul>
+
+<div class="callout coral">
+  <strong>一句话总结：</strong>Flutter + Riverpod + drift 这套，对你来说就是把 Spring 的 Bean 容器换成 Riverpod、JPA 换成 drift、模板换成 Widget。心智模型一致，剩下都是语法。金额全程 int 分、字符串直转，数据层先写测试，4 周出 MVP，用自己真实记账场景打磨。
+</div>
+
+<div class="footer">
+  记一笔 (jiyibi) 技术架构设计 v2 · 与 CLAUDE.md / 开发任务清单 v2 完全一致<br>
+  Flutter 3.22 + Riverpod 2.5 + drift 2.16 · Android 单平台先行 · 2026 年 7 月
+</div>
+
+</div>
+</body>
+</html>

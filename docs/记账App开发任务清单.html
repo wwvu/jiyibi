@@ -1,0 +1,1424 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>记一笔 — MVP 开发任务清单 v2</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;background:#F7F6F1;color:#2C2C2A;line-height:1.7;}
+  .wrap{max-width:960px;margin:0 auto;padding:40px 24px 80px;}
+  h1{font-size:28px;margin-bottom:8px;}
+  .sub{color:#888780;font-size:15px;margin-bottom:32px;}
+  h2{font-size:22px;margin:40px 0 16px;padding-bottom:8px;border-bottom:2px solid #E8E6DE;}
+  h2 .wk{display:inline-block;background:#0F6E56;color:#fff;font-size:13px;padding:2px 10px;border-radius:4px;margin-right:8px;vertical-align:middle;}
+  h2 .wk.sec{background:#BA7517;}
+  h2 .wk.v1{background:#185FA5;}
+  h3{font-size:17px;margin:24px 0 12px;color:#0F6E56;}
+
+  .summary-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:24px 0;}
+  .stat{background:#fff;border-radius:10px;padding:16px;text-align:center;border:1px solid #E8E6DE;}
+  .stat .num{font-size:28px;font-weight:700;color:#0F6E56;}
+  .stat .lbl{font-size:13px;color:#888780;margin-top:4px;}
+
+  table{width:100%;border-collapse:collapse;margin:16px 0;font-size:14px;}
+  th{background:#0F6E56;color:#fff;padding:10px 12px;text-align:left;font-weight:500;}
+  td{padding:10px 12px;border-bottom:1px solid #E8E6DE;vertical-align:top;}
+  tr:hover td{background:#E1F5EE;}
+  .tag{display:inline-block;font-size:11px;padding:2px 8px;border-radius:3px;font-weight:500;}
+  .tag-p0{background:#FCEBEB;color:#A32D2D;}
+  .tag-p1{background:#FAEEDA;color:#BA7517;}
+  .tag-p2{background:#E6F1FB;color:#185FA5;}
+
+  .task{background:#fff;border-radius:10px;padding:20px 24px;margin:16px 0;border:1px solid #E8E6DE;border-left:4px solid #0F6E56;}
+  .task.dep{border-left-color:#D85A30;}
+  .task.sec{border-left-color:#BA7517;}
+  .task.v1{border-left-color:#185FA5;}
+  .task-id{display:inline-block;background:#2C2C2A;color:#fff;font-size:12px;font-family:monospace;padding:2px 8px;border-radius:3px;margin-right:8px;}
+  .task h4{font-size:16px;display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap;}
+  .task .meta{display:flex;gap:16px;flex-wrap:wrap;font-size:13px;color:#888780;margin-bottom:12px;}
+  .task .meta span{display:flex;align-items:center;gap:4px;}
+  .task .section{margin:12px 0;}
+  .task .section-title{font-size:13px;font-weight:600;color:#5F5E5A;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;}
+  .task ul{margin-left:20px;font-size:14px;}
+  .task li{margin:4px 0;}
+  .task code{background:#F1EFE8;padding:2px 6px;border-radius:3px;font-size:13px;font-family:"SF Mono",Consolas,monospace;}
+  .task pre{background:#2C2C2A;color:#E8E6DE;padding:14px 16px;border-radius:8px;font-size:13px;overflow-x:auto;margin:8px 0;font-family:"SF Mono",Consolas,monospace;line-height:1.5;}
+  .task pre .kw{color:#9FE1CB;}
+  .task pre .str{color:#FAEEDA;}
+  .task pre .cmt{color:#888780;}
+
+  .deps{display:flex;gap:8px;flex-wrap:wrap;margin:4px 0;}
+  .dep-chip{background:#FAECE7;color:#D85A30;font-size:12px;padding:2px 8px;border-radius:3px;font-family:monospace;}
+
+  .check{background:#E1F5EE;border-radius:8px;padding:12px 16px;margin:8px 0;}
+  .check .section-title{color:#0F6E56;}
+  .check li{color:#2C2C2A;}
+
+  .warn{background:#FCEBEB;border-left:4px solid #A32D2D;padding:12px 16px;border-radius:0 8px 8px 0;margin:12px 0;font-size:14px;}
+  .warn-title{font-weight:600;color:#A32D2D;margin-bottom:4px;}
+
+  .callout{background:#FAEEDA;border-left:4px solid #BA7517;padding:12px 16px;border-radius:0 8px 8px 0;margin:12px 0;font-size:14px;}
+  .callout-title{font-weight:600;color:#BA7517;margin-bottom:4px;}
+
+  .legend{display:flex;gap:16px;font-size:13px;color:#888780;margin:16px 0;flex-wrap:wrap;}
+  .legend span{display:flex;align-items:center;gap:4px;}
+  .legend .dot{width:12px;height:12px;border-radius:3px;display:inline-block;}
+
+  .flow{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin:16px 0;font-size:13px;}
+  .flow .node{background:#0F6E56;color:#fff;padding:4px 12px;border-radius:4px;font-family:monospace;font-size:12px;}
+  .flow .arrow{color:#888780;}
+  .flow .node.dep{background:#D85A30;}
+
+  .pkg-table td:first-child{font-family:monospace;font-weight:600;color:#0F6E56;}
+  .pkg-table .mvp{color:#0F6E56;font-weight:600;}
+  .pkg-table .v1{color:#185FA5;}
+  .pkg-table .sec{color:#BA7517;}
+  @media(max-width:680px){
+    .summary-grid{grid-template-columns:repeat(2,1fr);}
+    .wrap{padding:24px 16px 60px;}
+  }
+  @media print{
+    body{background:#fff;}
+    .task{break-inside:avoid;}
+    .stat{break-inside:avoid;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>记一笔 — MVP 开发任务清单 v2</h1>
+<p class="sub">Flutter + Riverpod + drift · Android 单平台先行 · 收缩版 MVP（16任务）+ 上线前加固（3任务）+ V1 迭代（2任务）</p>
+
+<div class="warn">
+  <div class="warn-title">v2 相比 v1 的关键变更（动手前必读）</div>
+  <ol style="margin-left:20px;">
+    <li><b>金额改 int 分</b>：所有 amount/amountCents/balance 用 int 分存储，禁止 double 运算金额。新增 <code>MoneyUtils</code>。</li>
+    <li><b>统一 Android 先行</b>：全文档不再出现 iOS 先行表述。</li>
+    <li><b>MVP 收缩</b>：CSV导入、桌面Widget、数据备份、应用锁移出 MVP。导入/Widget 进 V1，应用锁/日志/备份进「上线前加固」。</li>
+    <li><b>records 补字段</b>：source / sourceId / merchant / updatedAt。</li>
+    <li><b>表加约束</b>：分类/账户加 archived 软删除 + 唯一性；预算 unique(month, categoryId)。</li>
+    <li><b>补测试</b>：新增 T1.6 Repository 单元测试（内存库）。</li>
+    <li><b>隐私策略</b>：加固阶段 S1/S2/S3，正式自用前必做。</li>
+  </ol>
+</div>
+
+<div class="warn" style="border-left-color:#0F6E56;">
+  <div class="warn-title">v2.1 数据库细节加固（开工前最后修正，优先级高于一切）</div>
+  <ol style="margin-left:20px;">
+    <li><b>预算表 categoryId 改 NOT NULL DEFAULT 0</b>：用 0 表示总预算（真实分类 id 从 1 开始，0 不冲突）。旧设计 nullable + unique(month, categoryId) 在 SQLite 中对 NULL 不生效，多条总预算可共存——约束形同虚设。改 0 后约束对所有行生效。</li>
+    <li><b>sourceId 真正落 DB 唯一约束</b>：Records 表加 <code>uniqueKeys => [{sourceId}]</code>。sourceId 可空，手记为 null（SQLite NULL 不冲突，多条手记 OK）；导入非空被 DB 直接拦截。应用层 batchInsertIfNew 是性能优化，DB 约束是兜底，双保险。</li>
+    <li><b>sourceId 生成规则扩展</b>：从 <code>sha1(date+amountCents+categoryId)</code> 扩展为 <code>sha1(source|date|type|amountCents|categoryId|noteNormalized|merchantNormalized)</code>。加入 type/note/merchant 避免同日同金额同分类误判（午饭和零食都 15 元餐饮不再被判重复）。note/merchant 规范化 = trim+lowercase，空则空串。</li>
+    <li><b>金额字符串直转 cents，不经 double</b>：<code>MoneyUtils.yuanToCents(String)</code> 拆整数/小数部分直转（<code>12*100+34=1234</code>），小数超两位截断。旧 <code>yuanToCents(double) => (yuan*100).round()</code> 经过浮点表示，极端值有精度漂移。数字键盘全程字符串累积，最后一次性转。</li>
+  </ol>
+  <p style="margin:8px 0 0 20px;color:#666;">以上 4 点已同步到 CLAUDE.md 数据表/约定/测试策略 + T1.2 MoneyUtils 代码 + T1.3 表结构/实现要点/验收 + T1.4 去重说明。<b>写代码以这些为准。</b></p>
+</div>
+
+<div class="summary-grid">
+  <div class="stat"><div class="num">16</div><div class="lbl">MVP 任务</div></div>
+  <div class="stat"><div class="num">3</div><div class="lbl">加固任务</div></div>
+  <div class="stat"><div class="num">2</div><div class="lbl">V1 迭代</div></div>
+  <div class="stat"><div class="num">4</div><div class="lbl">核心数据表</div></div>
+</div>
+
+<h2>使用说明</h2>
+<div class="callout">
+  <div class="callout-title">这份文档怎么用</div>
+  把每个 Task 作为一个独立的 Prompt 发给 AI（或自己照着做）。每个 Task 包含：<b>目标</b>、<b>依赖</b>、<b>要创建/修改的文件</b>、<b>实现要点</b>、<b>验收标准</b>。按 ID 顺序执行即可。<br>
+  <b>重要</b>：CLAUDE.md 是 Claude Code 自动加载的项目上下文，含金额约定/数据模型/隐私策略，与本文档一致，以两者为准。
+</div>
+
+<h2>技术栈一览（按阶段标注）</h2>
+<table class="pkg-table">
+  <tr><th>依赖</th><th>版本</th><th>用途</th><th>阶段</th></tr>
+  <tr><td>flutter_riverpod</td><td>^2.5.0</td><td>状态管理 + DI 容器</td><td class="mvp">MVP</td></tr>
+  <tr><td>drift</td><td>^2.16.0</td><td>类型安全 ORM</td><td class="mvp">MVP</td></tr>
+  <tr><td>sqlite3_flutter_libs</td><td>^0.5.0</td><td>SQLite 原生库</td><td class="mvp">MVP</td></tr>
+  <tr><td>drift_flutter</td><td>^0.2.0</td><td>drift 初始化辅助</td><td class="mvp">MVP</td></tr>
+  <tr><td>fl_chart</td><td>^0.68.0</td><td>图表（饼图/柱状图）</td><td class="mvp">MVP</td></tr>
+  <tr><td>intl</td><td>^0.19.0</td><td>日期/货币格式化</td><td class="mvp">MVP</td></tr>
+  <tr><td>shared_preferences</td><td>^2.2.0</td><td>轻量 KV（主题/分类记忆）</td><td class="mvp">MVP</td></tr>
+  <tr><td>path_provider</td><td>^2.1.0</td><td>文件路径</td><td class="mvp">MVP</td></tr>
+  <tr><td>csv</td><td>^6.0.0</td><td>CSV 导出</td><td class="mvp">MVP</td></tr>
+  <tr><td>file_picker</td><td>^8.0.0</td><td>文件选择（CSV 导入用）</td><td class="v1">V1</td></tr>
+  <tr><td>home_widget</td><td>^0.6.0</td><td>桌面 Widget</td><td class="v1">V1</td></tr>
+  <tr><td>local_auth</td><td>^2.2.0</td><td>生物识别锁</td><td class="sec">加固</td></tr>
+</table>
+
+<h2>MVP 任务依赖总览</h2>
+<div class="legend">
+  <span><span class="dot" style="background:#0F6E56"></span> 可独立开始</span>
+  <span><span class="dot" style="background:#D85A30"></span> 有前置依赖</span>
+  <span><span class="dot" style="background:#BA7517"></span> 加固阶段</span>
+  <span><span class="dot" style="background:#185FA5"></span> V1 迭代</span>
+</div>
+
+<div class="flow">
+  <span class="node">T1.1</span><span class="arrow">→</span>
+  <span class="node">T1.2</span><span class="arrow">→</span>
+  <span class="node">T1.3</span><span class="arrow">→</span>
+  <span class="node">T1.4</span><span class="arrow">→</span>
+  <span class="node">T1.5</span><span class="arrow">→</span>
+  <span class="node">T1.6</span>
+</div>
+<p style="font-size:13px;color:#888780;margin:4px 0 16px;">第 1 周：项目骨架 + 数据层 + Repository 测试（关键路径）</p>
+
+<div class="flow">
+  <span class="node dep">T2.1</span><span class="arrow">→</span>
+  <span class="node dep">T2.2</span><span class="arrow">→</span>
+  <span class="node dep">T2.3</span>
+</div>
+<p style="font-size:13px;color:#888780;margin:4px 0 16px;">第 2 周：记账核心（明细 → 记账弹层 → 编辑）</p>
+
+<div class="flow">
+  <span class="node dep">T3.1</span><span class="arrow">→</span>
+  <span class="node dep">T3.2</span>
+  <span style="color:#888780;margin:0 8px;">|</span>
+  <span class="node dep">T3.3</span>
+  <span style="color:#888780;margin:0 8px;">|</span>
+  <span class="node dep">T3.4</span>
+</div>
+<p style="font-size:13px;color:#888780;margin:4px 0 16px;">第 3 周：预算提醒 + 日历 + 报表（T3.1→T3.2 有依赖，T3.3/T3.4 可并行）</p>
+
+<div class="flow">
+  <span class="node dep">T4.1</span>
+  <span style="color:#888780;margin:0 8px;">|</span>
+  <span class="node dep">T4.2</span>
+  <span class="arrow">→</span>
+  <span class="node dep">T4.3</span>
+</div>
+<p style="font-size:13px;color:#888780;margin:4px 0 16px;">第 4 周：设置页 + CSV 导出 + 测试打包（T4.3 收尾）</p>
+
+<div class="flow">
+  <span class="node dep" style="background:#BA7517">S1</span><span class="arrow">→</span>
+  <span class="node dep" style="background:#BA7517">S2</span><span class="arrow">→</span>
+  <span class="node dep" style="background:#BA7517">S3</span>
+</div>
+<p style="font-size:13px;color:#888780;margin:4px 0 16px;">上线前加固：日志规范 → 应用锁 → 备份保护（正式自用前必做）</p>
+
+<div class="flow">
+  <span class="node dep" style="background:#185FA5">V1.1</span>
+  <span style="color:#888780;margin:0 8px;">|</span>
+  <span class="node dep" style="background:#185FA5">V1.2</span>
+</div>
+<p style="font-size:13px;color:#888780;margin:4px 0 16px;">V1 迭代：CSV 导入（鲨鱼迁移）+ 桌面 Widget</p>
+
+<!-- ==================== WEEK 1 ==================== -->
+
+<h2><span class="wk">第 1 周</span>项目骨架 + 数据层 + 测试</h2>
+<p>本周目标：搭好骨架，跑通数据层读写，并补上 Repository 单元测试。周末验证：内存库测试全绿 + 命令行能插能查。</p>
+
+<!-- T1.1 -->
+<div class="task">
+  <h4><span class="task-id">T1.1</span>初始化 Flutter 项目 + MVP 依赖 <span class="tag tag-p0">P0 关键路径</span></h4>
+  <div class="meta">
+    <span>⏱ 1-2h</span>
+    <span>📁 无</span>
+    <span>🔒 无依赖</span>
+  </div>
+  <div class="section">
+    <div class="section-title">目标</div>
+    <p>创建 Flutter 项目（Android 单平台），只配置 MVP 必装依赖。<b>不要</b>装 file_picker / home_widget / local_auth（V1/加固阶段才装）。</p>
+  </div>
+  <div class="section">
+    <div class="section-title">操作步骤</div>
+    <ul>
+      <li><code>flutter create --org com.personal --platforms android jiyibi</code> 创建项目</li>
+      <li>修改 <code>pubspec.yaml</code>，添加上表标注 <span class="mvp" style="color:#0F6E56;font-weight:600;">MVP</span> 的全部依赖 + dev_dependencies: <code>drift_dev</code>, <code>build_runner</code></li>
+      <li><code>flutter pub get</code></li>
+      <li>设置 <code>android/app/build.gradle</code> 的 <code>minSdkVersion 21</code></li>
+      <li><code>flutter run</code> 确认空项目能启动</li>
+    </ul>
+  </div>
+  <div class="check">
+    <div class="section-title">✅ 验收标准</div>
+    <ul>
+      <li><code>flutter run</code> 在 Android 设备上正常启动</li>
+      <li><code>flutter pub get</code> 无报错</li>
+      <li><code>pubspec.yaml</code> 只含 MVP 必装依赖，不含 file_picker/home_widget/local_auth</li>
+    </ul>
+  </div>
+</div>
+
+<!-- T1.2 -->
+<div class="task">
+  <h4><span class="task-id">T1.2</span>项目目录结构 + 主题系统 + MoneyUtils <span class="tag tag-p0">P0 关键路径</span></h4>
+  <div class="meta">
+    <span>⏱ 2-3h</span>
+    <span>📁 多文件</span>
+    <span>🔒 依赖 T1.1</span>
+  </div>
+  <div class="deps"><span class="dep-chip">T1.1</span></div>
+  <div class="section">
+    <div class="section-title">目标</div>
+    <p>建立 feature-first 目录结构，实现 5 套主题，搭好底部 Tab 骨架，<b>并实现 MoneyUtils 金额转换工具</b>（后续所有金额操作的基础）。</p>
+  </div>
+  <div class="section">
+    <div class="section-title">要创建的文件</div>
+    <ul>
+      <li><code>lib/core/utils/money_utils.dart</code> — 分↔元转换（<b>本任务核心</b>）</li>
+      <li><code>lib/core/theme/app_theme.dart</code> — 5 套 ThemeData</li>
+      <li><code>lib/core/theme/theme_provider.dart</code> — 主题状态</li>
+      <li><code>lib/core/router.dart</code> — Navigator + IndexedStack</li>
+      <li><code>lib/core/constants.dart</code> — 常量</li>
+      <li><code>lib/core/logger.dart</code> — AppLogger 空壳（加固 S1 填充，先定义接口）</li>
+      <li><code>lib/presentation/home/home_page.dart</code> — 底部 Tab 骨架</li>
+    </ul>
+  </div>
+  <div class="section">
+    <div class="section-title">MoneyUtils 实现（重要）</div>
+    <pre><span class="kw">class</span> MoneyUtils {
+  <span class="cmt">/// 分 → 元字符串，带千分位：123456 → "¥1,234.56"</span>
+  <span class="kw">static</span> String formatYuan(<span class="kw">int</span> cents) {
+    <span class="kw">final</span> neg = cents < 0;
+    <span class="kw">final</span> abs = cents.abs();
+    <span class="kw">final</span> yuan = abs ~/ 100;
+    <span class="kw">final</span> frac = abs % 100;
+    <span class="kw">final</span> yuanStr = yuan.toString().replaceAllMapped(
+      RegExp(r'(\d)(?=(\d{3})+(?!\d))'),
+      (m) => <span class="str">'${m[1]},'</span>);
+    <span class="kw">return</span> <span class="str">'${neg ? '-' : ''}¥$yuanStr.${frac.toString().padLeft(2, '0')}'</span>;
+  }
+
+  <span class="cmt">/// 元字符串 → 分：不经 double，字符串直转。</span>
+  <span class="cmt">/// "12.34"→1234 / "12.3"→1230 / "12"→1200 / ""→0 / "-12.34"→-1234</span>
+  <span class="cmt">/// 小数超两位截断（不四舍五入，避免歧义）；非法格式返回 0</span>
+  <span class="kw">static int</span> yuanToCents(String yuan) {
+    <span class="kw">final</span> s = yuan.trim();
+    <span class="kw">if</span> (s.isEmpty) <span class="kw">return</span> 0;
+    <span class="kw">var</span> neg = <span class="kw">false</span>;
+    <span class="kw">var</span> body = s;
+    <span class="kw">if</span> (body.startsWith(<span class="str">'-'</span>)) { neg = <span class="kw">true</span>; body = body.substring(1); }
+    <span class="kw">else if</span> (body.startsWith(<span class="str">'+'</span>)) { body = body.substring(1); }
+    <span class="kw">final</span> dot = body.indexOf(<span class="str">'.'</span>);
+    <span class="kw">int</span> yuanInt, fracInt;
+    <span class="kw">if</span> (dot < 0) {
+      yuanInt = <span class="kw">int</span>.tryParse(body) ?? 0;
+      fracInt = 0;
+    } <span class="kw">else</span> {
+      yuanInt = <span class="kw">int</span>.tryParse(body.substring(0, dot)) ?? 0;
+      <span class="kw">var</span> frac = body.substring(dot + 1);
+      <span class="kw">if</span> (frac.length > 2) frac = frac.substring(0, 2);   <span class="cmt">// 截断到两位</span>
+      frac = frac.padRight(2, <span class="str">'0'</span>);                       <span class="cmt">// "3" → "30"</span>
+      fracInt = <span class="kw">int</span>.tryParse(frac) ?? 0;
+    }
+    <span class="kw">final</span> cents = yuanInt * 100 + fracInt;
+    <span class="kw">return</span> neg ? -cents : cents;
+  }
+
+  <span class="cmt">/// 减法（分），避免溢出</span>
+  <span class="kw">static int</span> sub(<span class="kw">int</span> a, <span class="kw">int</span> b) => a - b;
+}</pre>
+  </div>
+  <div class="section">
+    <div class="section-title">实现要点</div>
+    <ul>
+      <li><b>5 套主题</b>：青松(默认)、暖阳、雾兰、樱粉、暗夜。每套定义 ColorScheme + TextTheme</li>
+      <li><code>shared_preferences</code> 持久化主题选择</li>
+      <li>底部 Tab：明细、日历、+(记账)、报表、我的，IndexedStack 保持状态</li>
+      <li>语义色常量：支出 <code>#D85A30</code>、收入 <code>#3B6D11</code>，所有主题不变</li>
+      <li><b>AppLogger 空壳</b>：定义 <code>AppLogger.d(String tag, String msg)</code>，内部暂时空实现，加固 S1 填充。从现在起全项目禁止 <code>print</code>，一律走 AppLogger</li>
+    </ul>
+  </div>
+  <div class="check">
+    <div class="section-title">✅ 验收标准</div>
+    <ul>
+      <li>App 启动显示底部 5 个 Tab，可切换</li>
+      <li>5 套主题切换后所有颜色正确变化，重启记住选择</li>
+      <li><b>MoneyUtils 单测</b>：formatYuan(0)→"¥0.00"、formatYuan(1)→"¥0.01"、formatYuan(123456)→"¥1,234.56"、formatYuan(-123456)→"-¥1,234.56"<br>yuanToCents("12.34")→1234、yuanToCents("12.3")→1230、yuanToCents("12")→1200、yuanToCents("")→0、yuanToCents("12.345")→1234(截断)、yuanToCents("-12.34")→-1234、yuanToCents("  12.34  ")→1234(trim)</li>
+      <li>全项目无 <code>print</code>（IDE 全局搜索确认）</li>
+    </ul>
+  </div>
+</div>
+
+<!-- T1.3 -->
+<div class="task dep">
+  <h4><span class="task-id">T1.3</span>drift 数据库定义（新字段+约束+归档） <span class="tag tag-p0">P0 关键路径</span></h4>
+  <div class="meta">
+    <span>⏱ 3-4h</span>
+    <span>📁 data/database/</span>
+    <span>🔒 依赖 T1.1</span>
+  </div>
+  <div class="deps"><span class="dep-chip">T1.1</span></div>
+  <div class="section">
+    <div class="section-title">目标</div>
+    <p>定义 4 张核心表的 drift schema。<b>关键变更</b>：金额用 int 分、records 补 source/sourceId/merchant/updatedAt、分类账户加 archived、各表加唯一约束。跑通代码生成 + 初始化默认数据。</p>
+  </div>
+  <div class="section">
+    <div class="section-title">要创建的文件</div>
+    <ul>
+      <li><code>lib/data/database/app_database.dart</code> — Database 类（含 <code>forTesting</code> 命名构造，T1.6 用）</li>
+      <li><code>lib/data/database/tables.dart</code> — 4 张表定义</li>
+    </ul>
+  </div>
+  <div class="section">
+    <div class="section-title">表结构（v2）</div>
+    <pre><span class="kw">class</span> Records <span class="kw">extends</span> Table {
+  IntColumn get id => integer().autoIncrement()();
+  DateTimeColumn get date => dateTime()();
+  TextColumn get type => text().withDefault(<span class="kw">const</span> Constant(<span class="str">'expense'</span>))(); <span class="cmt">// 'expense'|'income'</span>
+  IntColumn get amountCents => integer()();              <span class="cmt">// 金额，分，始终正数</span>
+  IntColumn get categoryId => integer().nullable()();
+  TextColumn get note => text().nullable()();
+  IntColumn get accountId => integer().withDefault(<span class="kw">const</span> Constant(1))();
+  TextColumn get source => text().withDefault(<span class="kw">const</span> Constant(<span class="str">'manual'</span>))(); <span class="cmt">// manual|import|csv</span>
+  TextColumn get sourceId => text().nullable()();        <span class="cmt">// 导入去重键，DB 唯一约束（见下）</span>
+  TextColumn get merchant => text().nullable()();        <span class="cmt">// 商户/对方</span>
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+  DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
+  <span class="kw">@override</span>
+  List&lt;Set&lt;Column&gt;&gt; get uniqueKeys => [{sourceId}];   <span class="cmt">// 导入去重：手记 sourceId=null 不冲突，导入非空被 DB 拦截</span>
+}
+
+<span class="kw">class</span> Categories <span class="kw">extends</span> Table {
+  IntColumn get id => integer().autoIncrement()();
+  TextColumn get name => text()();
+  TextColumn get icon => text()();
+  TextColumn get color => text()();
+  TextColumn get type => text()();                        <span class="cmt">// 'expense'|'income'</span>
+  IntColumn get sortOrder => integer().withDefault(<span class="kw">const</span> Constant(0))();
+  BoolColumn get archived => boolean().withDefault(<span class="kw">const</span> Constant(<span class="kw">false</span>))();
+  <span class="kw">@override</span>
+  List&lt;Set&lt;Column&gt;&gt; get uniqueKeys => [{name, type}];     <span class="cmt">// 同类型分类名唯一</span>
+}
+
+<span class="kw">class</span> Accounts <span class="kw">extends</span> Table {
+  IntColumn get id => integer().autoIncrement()();
+  TextColumn get name => text()();
+  IntColumn get balanceCents => integer().withDefault(<span class="kw">const</span> Constant(0))();
+  TextColumn get icon => text().nullable()();
+  BoolColumn get archived => boolean().withDefault(<span class="kw">const</span> Constant(<span class="kw">false</span>))();
+  <span class="kw">@override</span>
+  List&lt;Set&lt;Column&gt;&gt; get uniqueKeys => [{name}];
+}
+
+<span class="kw">class</span> Budgets <span class="kw">extends</span> Table {
+  IntColumn get id => integer().autoIncrement()();
+  IntColumn get month => integer()();                    <span class="cmt">// 202607</span>
+  IntColumn get amountCents => integer()();              <span class="cmt">// 预算，分</span>
+  IntColumn get categoryId => integer().withDefault(<span class="kw">const</span> Constant(0))();  <span class="cmt">// 0=总预算；真实分类 id 从 1 开始，0 不冲突</span>
+  <span class="kw">@override</span>
+  List&lt;Set&lt;Column&gt;&gt; get uniqueKeys => [{month, categoryId}]; <span class="cmt">// 同月同分类唯一，含总预算(categoryId=0)</span>
+}</pre>
+  </div>
+  <div class="section">
+    <div class="section-title">实现要点</div>
+    <ul>
+      <li>AppDatabase 加 <code>AppDatabase.forTesting(QueryExecutor e) : super(e)</code> 构造，T1.6 内存库测试用</li>
+      <li>运行 <code>dart run build_runner build</code> 生成 <code>.g.dart</code></li>
+      <li>数据库初始化：插入 8 个默认支出分类 + 3 个默认收入分类 + 1 个默认账户「现金」</li>
+      <li>预算写入用 upsert（同 month+categoryId 存在则更新），依赖唯一约束。总预算行写 categoryId=0，同样走 upsert</li>
+      <li>MVP 不加密（明文），后续切 SQLCipher 只改 Database 定义一处</li>
+      <li><b>sourceId 去重是 DB 层 + 应用层双保险</b>：DB 唯一约束（uniqueKeys={sourceId}）拦截并发/遗漏；应用层 batchInsertIfNew 先查已有 sourceId 集合批量过滤，避免逐条触发异常。生成规则：<code>sha1(source|date|type|amountCents|categoryId|noteNormalized|merchantNormalized)</code>，note/merchant 取 trim+lowercase，空则空串。含 type/note/merchant 避免同日同金额同分类误判</li>
+      <li><b>不再有 nullable categoryId 的 NULL 问题</b>：总预算用 0，真实分类从 1 开始，unique(month, categoryId) 对所有行生效</li>
+    </ul>
+  </div>
+  <div class="callout">
+    <div class="callout-title">为什么用 archived 软删除而不是物理删除</div>
+    删除分类/账户会破坏历史记录的外键完整性。归档后选择器隐藏，但历史流水仍能正确关联显示分类名。这是记账类应用的标准做法。
+  </div>
+  <div class="check">
+    <div class="section-title">✅ 验收标准</div>
+    <ul>
+      <li><code>dart run build_runner build</code> 无报错，生成 <code>.g.dart</code></li>
+      <li>App 启动后数据库创建，默认分类/账户已写入</li>
+      <li>插入重复 (name,type) 分类会抛唯一约束异常</li>
+      <li>插入重复 (month,categoryId) 预算会抛唯一约束异常；总预算 categoryId=0 也受约束（同月插两条 categoryId=0 会报错）</li>
+      <li>records 的 source 默认 'manual'、sourceId 默认 null</li>
+      <li>插入两条 sourceId='abc123' 的记录会抛唯一约束异常；插入多条 sourceId=null 不报错（SQLite NULL 不冲突）</li>
+    </ul>
+  </div>
+</div>
+
+<!-- T1.4 -->
+<div class="task dep">
+  <h4><span class="task-id">T1.4</span>Repository 层实现（int 分 + 新字段） <span class="tag tag-p0">P0 关键路径</span></h4>
+  <div class="meta">
+    <span>⏱ 2-3h</span>
+    <span>📁 data/repositories/</span>
+    <span>🔒 依赖 T1.3</span>
+  </div>
+  <div class="deps"><span class="dep-chip">T1.3</span></div>
+  <div class="section">
+    <div class="section-title">目标</div>
+    <p>实现 4 个 Repository，封装所有数据库操作。<b>金额一律 int 分</b>，返回类型不用 double。insert/update 带 source/updatedAt。</p>
+  </div>
+  <div class="section">
+    <div class="section-title">要创建的文件</div>
+    <ul>
+      <li><code>lib/data/repositories/record_repository.dart</code></li>
+      <li><code>lib/data/repositories/category_repository.dart</code></li>
+      <li><code>lib/data/repositories/budget_repository.dart</code></li>
+      <li><code>lib/data/repositories/account_repository.dart</code></li>
+    </ul>
+  </div>
+  <div class="section">
+    <div class="section-title">RecordRepository 方法清单（v2）</div>
+    <pre><span class="cmt">// 增（手记：source='manual', sourceId=null）</span>
+Future&lt;<span class="kw">int</span>&gt; insertRecord(RecordsCompanion data);
+<span class="cmt">// 批量插入（导入用，带去重：sourceId 已存在则跳过）</span>
+Future&lt;<span class="kw">int</span>&gt; batchInsertIfNew(List&lt;RecordsCompanion&gt; records);
+<span class="cmt">// 改（同步更新 updatedAt）</span>
+Future&lt;<span class="kw">int</span>&gt; updateRecord(Record record);  <span class="cmt">// 返回受影响行数</span>
+<span class="cmt">// 删</span>
+Future&lt;<span class="kw">int</span>&gt; deleteRecord(<span class="kw">int</span> id);
+<span class="cmt">// 查 - 按月全部</span>
+Future&lt;List&lt;Record&gt;&gt; getRecordsByMonth(<span class="kw">int</span> year, <span class="kw">int</span> month);
+<span class="cmt">// 查 - 按日</span>
+Future&lt;List&lt;Record&gt;&gt; getRecordsByDay(DateTime date);
+<span class="cmt">// 当月总支出/总收入（int 分）</span>
+Future&lt;({<span class="kw">int</span> expenseCents, <span class="kw">int</span> incomeCents})&gt; getMonthSummary(<span class="kw">int</span> year, <span class="kw">int</span> month);
+<span class="cmt">// 按分类统计当月（int 分）</span>
+Future&lt;List&lt;({String category, <span class="kw">int</span> amountCents})&gt;&gt; getMonthByCategory(<span class="kw">int</span> year, <span class="kw">int</span> month);
+<span class="cmt">// 按日统计当月（趋势图用）</span>
+Future&lt;List&lt;({<span class="kw">int</span> day, <span class="kw">int</span> amountCents})&gt;&gt; getMonthByDay(<span class="kw">int</span> year, <span class="kw">int</span> month);
+<span class="cmt">// 按 sourceId 查（导入去重判断）</span>
+Future&lt;Set&lt;String&gt;&gt; getExistingSourceIds(<span class="kw">int</span> year, <span class="kw">int</span> month);</pre>
+  </div>
+  <div class="section">
+    <div class="section-title">实现要点</div>
+    <ul>
+      <li>每个 Repository 接收 <code>AppDatabase</code> 作为构造参数</li>
+      <li><b>金额聚合用 SQLite 整数 SUM</b>：<code>records.amountCents.sum()</code>，结果 int，绝不转 double</li>
+      <li><code>updateRecord</code> 必须更新 <code>updatedAt = DateTime.now()</code></li>
+      <li><code>batchInsertIfNew</code>：先查当月已有 sourceId 集合，过滤掉重复的，再批量插。这是性能优化（避免逐条异常）；DB 唯一约束是兜底，万一应用层遗漏仍会被拦截</li>
+      <li><code>getMonthByCategory</code> 用 drift <code>join</code> 关联 records + categories，只统计未归档分类</li>
+      <li>查询分类/账户列表时默认过滤 <code>archived = false</code>，提供 <code>getAll(includeArchived: true)</code> 管理页用</li>
+    </ul>
+  </div>
+  <div class="check">
+    <div class="section-title">✅ 验收标准</div>
+    <ul>
+      <li>所有方法编译通过，返回类型为 int（分）</li>
+      <li>插入 3 条（amountCents 分别 1234/5600/9900），<code>getMonthSummary</code> 返回支出 16734</li>
+      <li>更新一条后 <code>updatedAt</code> 晚于 <code>createdAt</code></li>
+      <li><code>batchInsertIfNew</code> 插入含重复 sourceId 的列表，重复的被跳过</li>
+    </ul>
+  </div>
+</div>
+
+<!-- T1.5 -->
+<div class="task dep">
+  <h4><span class="task-id">T1.5</span>Riverpod Provider 装配 + 数据层联调 <span class="tag tag-p0">P0 关键路径</span></h4>
+  <div class="meta">
+    <span>⏱ 1-2h</span>
+    <span>📁 core/providers.dart</span>
+    <span>🔒 依赖 T1.4</span>
+  </div>
+  <div class="deps"><span class="dep-chip">T1.4</span></div>
+  <div class="section">
+    <div class="section-title">目标</div>
+    <p>Database + Repository 注册为 Provider，写临时页面验证完整数据链路。</p>
+  </div>
+  <div class="section">
+    <div class="section-title">Provider 定义</div>
+    <pre><span class="kw">final</span> databaseProvider = Provider&lt;AppDatabase&gt;((ref) => AppDatabase());
+
+<span class="kw">final</span> recordRepoProvider = Provider&lt;RecordRepository&gt;((ref) {
+  <span class="kw">return</span> RecordRepository(ref.read(databaseProvider));
+});
+<span class="cmt">// ... category/budget/account 同理</span>
+
+<span class="kw">final</span> currentMonthProvider = StateProvider&lt;DateTime&gt;((ref) => DateTime.now());
+
+<span class="cmt">// 当月记录</span>
+<span class="kw">final</span> monthRecordsProvider = FutureProvider&lt;List&lt;Record&gt;&gt;((ref) <span class="kw">async</span> {
+  <span class="kw">final</span> date = ref.watch(currentMonthProvider);
+  <span class="kw">return</span> ref.read(recordRepoProvider).getRecordsByMonth(date.year, date.month);
+});
+
+<span class="cmt">// 当月收支（int 分）</span>
+<span class="kw">final</span> monthSummaryProvider =
+  FutureProvider&lt;({<span class="kw">int</span> expenseCents, <span class="kw">int</span> incomeCents})&gt;((ref) <span class="kw">async</span> {
+  <span class="kw">final</span> date = ref.watch(currentMonthProvider);
+  <span class="kw">return</span> ref.read(recordRepoProvider).getMonthSummary(date.year, date.month);
+});</pre>
+  </div>
+  <div class="section">
+    <div class="section-title">要创建的文件</div>
+    <ul>
+      <li><code>lib/core/providers.dart</code></li>
+      <li>修改 <code>lib/main.dart</code> — 包裹 ProviderScope</li>
+    </ul>
+  </div>
+  <div class="check">
+    <div class="section-title">✅ 验收标准</div>
+    <ul>
+      <li>临时页面显示当月记录列表（从 DB 读）</li>
+      <li>临时页面显示当月收支总额，用 <code>MoneyUtils.formatYuan</code> 显示</li>
+      <li>Provider 编译无错，热重载正常</li>
+      <li><b>第 1 周里程碑（除测试）：数据层跑通</b></li>
+    </ul>
+  </div>
+</div>
+
+<!-- T1.6 -->
+<div class="task dep">
+  <h4><span class="task-id">T1.6</span>Repository 单元测试 <span class="tag tag-p0">P0（新增）</span></h4>
+  <div class="meta">
+    <span>⏱ 2-3h</span>
+    <span>📁 test/</span>
+    <span>🔒 依赖 T1.4</span>
+  </div>
+  <div class="deps"><span class="dep-chip">T1.4</span></div>
+  <div class="section">
+    <div class="section-title">目标</div>
+    <p>用 drift 内存库 <code>NativeDatabase.memory()</code> 对 Repository 做单元测试，确保数据层逻辑正确。这是后续重构的安全网。</p>
+  </div>
+  <div class="section">
+    <div class="section-title">要创建的文件</div>
+    <ul>
+      <li><code>test/utils/money_utils_test.dart</code> — 金额转换测试</li>
+      <li><code>test/data/record_repository_test.dart</code> — RecordRepository 测试</li>
+      <li><code>test/data/budget_repository_test.dart</code> — 预算 upsert / 唯一约束测试</li>
+    </ul>
+  </div>
+  <div class="section">
+    <div class="section-title">测试模板</div>
+    <pre><span class="kw">import</span> 'package:drift/native.dart';
+<span class="kw">import</span> 'package:flutter_test/flutter_test.dart';
+
+<span class="kw">void</span> main() {
+  late AppDatabase db;
+  late RecordRepository repo;
+
+  setUp(() {
+    db = AppDatabase.forTesting(NativeDatabase.memory());
+    repo = RecordRepository(db);
+  });
+  tearDown(() => db.close());
+
+  test(<span class="str">'insert and query by month'</span>, () <span class="kw">async</span> {
+    <span class="kw">final</span> id = <span class="kw">await</span> repo.insertRecord(RecordsCompanion.insert(
+      date: DateTime(2026, 7, 5),
+      type: <span class="kw">const</span> Value(<span class="str">'expense'</span>),
+      amountCents: <span class="kw">const</span> Value(1234),
+    ));
+    <span class="kw">final</span> list = <span class="kw">await</span> repo.getRecordsByMonth(2026, 7);
+    <span class="kw">expect</span>(list.length, 1);
+    <span class="kw">expect</span>(list.first.amountCents, 1234);
+    <span class="kw">expect</span>(list.first.source, <span class="str">'manual'</span>);
+    <span class="kw">expect</span>(list.first.sourceId, isNull);
+  });
+
+  test(<span class="str">'month summary returns int cents'</span>, () <span class="kw">async</span> { ... });
+
+  test(<span class="str">'updateRecord bumps updatedAt'</span>, () <span class="kw">async</span> { ... });
+
+  test(<span class="str">'batchInsertIfNew skips duplicate sourceId'</span>, () <span class="kw">async</span> {
+    <span class="kw">final</span> records = [ <span class="cmt">/* 3 条，其中 1 条 sourceId 重复 */</span> ];
+    <span class="kw">final</span> inserted = <span class="kw">await</span> repo.batchInsertIfNew(records);
+    <span class="kw">expect</span>(inserted, 2); <span class="cmt">// 重复的被跳过</span>
+  });
+
+  test(<span class="str">'unique constraint: duplicate (month, categoryId) budget throws'</span>, () <span class="kw">async</span> { ... });
+});</pre>
+  </div>
+  <div class="section">
+    <div class="section-title">必须覆盖的场景</div>
+    <ul>
+      <li><b>金额</b>：summary 返回 int、大额求和无溢出、formatYuan/yuanToCents 边界</li>
+      <li><b>预算</b>：upsert 同 month+categoryId 更新而非插入、重复插入抛约束</li>
+      <li><b>导入去重</b>：batchInsertIfNew 跳过重复 sourceId</li>
+      <li><b>归档</b>：getCategories 默认不含 archived、getAll(includeArchived:true) 含</li>
+      <li><b>updatedAt</b>：update 后 updatedAt 晚于 createdAt</li>
+    </ul>
+  </div>
+  <div class="check">
+    <div class="section-title">✅ 验收标准</div>
+    <ul>
+      <li><code>flutter test</code> 全绿</li>
+      <li>覆盖上述 5 类场景，至少 12 个断言</li>
+      <li><b>第 1 周里程碑：数据层 + 测试完成</b></li>
+    </ul>
+  </div>
+</div>
+
+<!-- ==================== WEEK 2 ==================== -->
+
+<h2><span class="wk">第 2 周</span>记账核心</h2>
+<p>本周目标：记账闭环——记账、看流水、编辑删除。MVP 最高频功能。</p>
+
+<!-- T2.1 -->
+<div class="task dep">
+  <h4><span class="task-id">T2.1</span>明细流水页 <span class="tag tag-p0">P0</span></h4>
+  <div class="meta">
+    <span>⏱ 3-4h</span>
+    <span>📁 presentation/detail/</span>
+    <span>🔒 依赖 T1.5</span>
+  </div>
+  <div class="deps"><span class="dep-chip">T1.5</span></div>
+  <div class="section">
+    <div class="section-title">目标</div>
+    <p>月份切换 + 收支结余总览 + 按日分组流水列表 + 左滑删除。<b>金额用 MoneyUtils.formatYuan 显示</b>。</p>
+  </div>
+  <div class="section">
+    <div class="section-title">要创建的文件</div>
+    <ul>
+      <li><code>lib/presentation/detail/detail_page.dart</code></li>
+      <li><code>lib/presentation/detail/widgets/month_summary_card.dart</code></li>
+      <li><code>lib/presentation/detail/widgets/record_list_tile.dart</code></li>
+    </ul>
+  </div>
+  <div class="section">
+    <div class="section-title">实现要点</div>
+    <ul>
+      <li>顶部月份选择器切换 <code>currentMonthProvider</code></li>
+      <li>结余卡片：「本月支出」「本月收入」「结余」三个数字，全部 <code>formatYuan(cents)</code></li>
+      <li>列表按日分组：每天 header（日期+星期+当日支出小计）+ 该日记录</li>
+      <li>每条记录：分类圆形图标 + 备注/分类名 + 右侧金额（<code>formatYuan</code>）</li>
+      <li>左滑删除：<code>Dismissible</code>，确认后调 <code>deleteRecord</code></li>
+      <li>空状态插画 + 「记一笔」引导按钮</li>
+    </ul>
+  </div>
+  <div class="check">
+    <div class="section-title">✅ 验收标准</div>
+    <ul>
+      <li>月份切换数据实时刷新</li>
+      <li>收支总额正确，金额带千分位 ¥1,234.56</li>
+      <li>按日分组、每日小计正确</li>
+      <li>左滑删除有确认，删除后列表刷新</li>
+    </ul>
+  </div>
+</div>
+
+<!-- T2.2 -->
+<div class="task dep">
+  <h4><span class="task-id">T2.2</span>记账弹层（数字键盘 + 分类选择） <span class="tag tag-p0">P0 核心交互</span></h4>
+  <div class="meta">
+    <span>⏱ 4-5h</span>
+    <span>📁 presentation/editor/</span>
+    <span>🔒 依赖 T2.1</span>
+  </div>
+  <div class="deps"><span class="dep-chip">T2.1</span></div>
+  <div class="section">
+    <div class="section-title">目标</div>
+    <p>底部弹出记账面板，3 秒完成一次记账。<b>输入元、存分</b>：数字键盘全程字符串累积，完成时 <code>MoneyUtils.yuanToCents("12.34")=1234</code>，不经 double。</p>
+  </div>
+  <div class="section">
+    <div class="section-title">要创建的文件</div>
+    <ul>
+      <li><code>lib/presentation/editor/editor_sheet.dart</code></li>
+      <li><code>lib/presentation/editor/widgets/number_pad.dart</code></li>
+      <li><code>lib/presentation/editor/widgets/category_grid.dart</code></li>
+      <li><code>lib/presentation/editor/editor_provider.dart</code></li>
+    </ul>
+  </div>
+  <div class="section">
+    <div class="section-title">交互设计</div>
+    <ul>
+      <li><code>showModalBottomSheet</code>，isScrollControlled: true，圆角顶部</li>
+      <li>顶部支出|收入 Tab，默认支出，切换后分类网格跟着变</li>
+      <li>金额显示大字 ¥0.00，输入实时更新（<b>显示用 double，存库转分</b>）</li>
+      <li>分类网格 4×2，圆形彩色背景 + 首字 + 分类名，选中高亮</li>
+      <li>备注 TextField，hint「添加备注」</li>
+      <li>数字键盘：1-9, 0, ., 00, ⌫, 今天, 完成</li>
+      <li>完成按钮金额为 0 时置灰</li>
+      <li>保存：<code>RecordsCompanion.insert(amountCents: Value(MoneyUtils.yuanToCents(input)), source: const Value('manual'), ...)</code></li>
+      <li>保存后关闭弹层，invalidate 列表 Provider</li>
+    </ul>
+  </div>
+  <div class="section">
+    <div class="section-title">NumberPad 要点</div>
+    <ul>
+      <li>纯 Widget，自己画 4×4 网格</li>
+      <li>输入逻辑：数字追加字符串，小数点只允许一个，小数位最多 2 位</li>
+      <li>「00」快速输入整百（50→5000）</li>
+      <li>「⌫」删末尾字符</li>
+      <li>「今天」快捷填日期（默认今天，可改）</li>
+    </ul>
+  </div>
+  <div class="callout">
+    <div class="callout-title">分类记忆</div>
+    用 shared_preferences 存 lastExpenseCategory / lastIncomeCategory，下次打开自动选中。
+  </div>
+  <div class="check">
+    <div class="section-title">✅ 验收标准</div>
+    <ul>
+      <li>点 + 弹出面板，数字键盘输入流畅</li>
+      <li>支出/收入切换分类网格正确</li>
+      <li>选分类 → 输 12.34 → 完成，存库 amountCents=1234，明细页显示 ¥12.34</li>
+      <li>下次打开默认选中上次分类</li>
+      <li>金额为 0 完成按钮不可点</li>
+    </ul>
+  </div>
+</div>
+
+<!-- T2.3 -->
+<div class="task dep">
+  <h4><span class="task-id">T2.3</span>记账编辑 + 记录详情 <span class="tag tag-p1">P1</span></h4>
+  <div class="meta">
+    <span>⏱ 2h</span>
+    <span>📁 presentation/editor/</span>
+    <span>🔒 依赖 T2.2</span>
+  </div>
+  <div class="deps"><span class="dep-chip">T2.2</span></div>
+  <div class="section">
+    <div class="section-title">目标</div>
+    <p>点击已有记录打开编辑弹层（复用 editor_sheet），修改后保存。</p>
+  </div>
+  <div class="section">
+    <div class="section-title">实现要点</div>
+    <ul>
+      <li>明细页点列表项 → editor_sheet 传入 Record 预填</li>
+      <li>支持「新增」「编辑」两种模式，编辑模式顶显示「编辑」+ 删除按钮</li>
+      <li>保存调 <code>updateRecord</code>（同步更新 updatedAt）而非 insert</li>
+      <li>编辑时金额预填：cents → 显示用 <code>(cents/100).toStringAsFixed(2)</code></li>
+      <li>保存后 invalidate 刷新</li>
+    </ul>
+  </div>
+  <div class="check">
+    <div class="section-title">✅ 验收标准</div>
+    <ul>
+      <li>点记录可编辑，预填正确</li>
+      <li>修改后保存，列表刷新，updatedAt 更新</li>
+      <li>编辑模式可删除</li>
+      <li><b>第 2 周里程碑：记账闭环完成</b></li>
+    </ul>
+  </div>
+</div>
+
+<!-- ==================== WEEK 3 ==================== -->
+
+<h2><span class="wk">第 3 周</span>预算提醒 + 日历 + 报表</h2>
+<p>本周目标：补鲨鱼记账缺口——预算实时提醒、日历、报表。差异化亮点。</p>
+
+<!-- T3.1 -->
+<div class="task dep">
+  <h4><span class="task-id">T3.1</span>预算设置页 <span class="tag tag-p0">P0 差异化</span></h4>
+  <div class="meta">
+    <span>⏱ 2-3h</span>
+    <span>📁 presentation/budget/</span>
+    <span>🔒 依赖 T1.5</span>
+  </div>
+  <div class="deps"><span class="dep-chip">T1.5</span></div>
+  <div class="section">
+    <div class="section-title">目标</div>
+    <p>设置月度总预算 + 各分类预算，存 budgets 表。<b>金额 int 分，用 upsert 写入</b>（依赖 unique(month,categoryId)）。</p>
+  </div>
+  <div class="section">
+    <div class="section-title">要创建的文件</div>
+    <ul>
+      <li><code>lib/presentation/budget/budget_page.dart</code></li>
+      <li><code>lib/presentation/budget/widgets/budget_ring.dart</code></li>
+      <li><code>lib/presentation/budget/widgets/category_budget_bar.dart</code></li>
+    </ul>
+  </div>
+  <div class="section">
+    <div class="section-title">实现要点</div>
+    <ul>
+      <li>顶部环形进度：总预算 vs 已支出，百分比居中，金额 formatYuan</li>
+      <li>分类预算条：分类名 + 已用/预算 + 进度条（超支变红）</li>
+      <li>预算写入用 upsert：同 month+categoryId 存在则更新</li>
+      <li>首次无预算引导设置</li>
+    </ul>
+  </div>
+  <div class="check">
+    <div class="section-title">✅ 验收标准</div>
+    <ul>
+      <li>能设置/修改总预算和分类预算，数据持久化</li>
+      <li>重复设置同月同分类预算是更新不是新增（upsert 生效）</li>
+      <li>环形/进度条正确，超支变红</li>
+    </ul>
+  </div>
+</div>
+
+<!-- T3.2 -->
+<div class="task dep">
+  <h4><span class="task-id">T3.2</span>预算超支预测提醒（int 分 + 测试） <span class="tag tag-p0">P0 核心差异化</span></h4>
+  <div class="meta">
+    <span>⏱ 3-4h</span>
+    <span>📁 core/ + presentation/budget/</span>
+    <span>🔒 依赖 T3.1</span>
+  </div>
+  <div class="deps"><span class="dep-chip">T3.1</span></div>
+  <div class="section">
+    <div class="section-title">目标</div>
+    <p>按消费节奏预测月末是否超支，给日均建议。<b>算法全程 int 分运算</b>，并写单元测试。</p>
+  </div>
+  <div class="section">
+    <div class="section-title">要创建的文件</div>
+    <ul>
+      <li><code>lib/core/budget_predictor.dart</code> — 纯算法，无副作用</li>
+      <li><code>lib/presentation/budget/widgets/overspend_alert.dart</code></li>
+      <li><code>test/core/budget_predictor_test.dart</code> — <b>必写</b></li>
+  </ul>
+  </div>
+  <div class="section">
+    <div class="section-title">算法（int 分）</div>
+    <pre><span class="kw">class</span> BudgetPredictor {
+  <span class="cmt">/// 预测月末支出（分）。daysPassed&gt;0 才算</span>
+  <span class="kw">static int</span> predictMonthEndCents(
+      <span class="kw">int</span> monthSpentCents, <span class="kw">int</span> daysPassed, <span class="kw">int</span> daysInMonth) {
+    <span class="kw">if</span> (daysPassed &lt;= 0) <span class="kw">return</span> 0;
+    <span class="kw">final</span> dailyAvg = monthSpentCents ~/ daysPassed;  <span class="cmt">// 整除</span>
+    <span class="kw">return</span> dailyAvg * daysInMonth;
+  }
+
+  <span class="kw">static bool</span> willOverspend(<span class="kw">int</span> projectedCents, <span class="kw">int</span> budgetCents) =>
+      projectedCents &gt; budgetCents;
+
+  <span class="cmt">/// 建议日均（分）。剩余预算 / 剩余天数</span>
+  <span class="kw">static int</span> suggestedDailyCents(
+      <span class="kw">int</span> budgetCents, <span class="kw">int</span> monthSpentCents,
+      <span class="kw">int</span> daysPassed, <span class="kw">int</span> daysInMonth) {
+    <span class="kw">final</span> remaining = budgetCents - monthSpentCents;
+    <span class="kw">final</span> daysLeft = daysInMonth - daysPassed;
+    <span class="kw">if</span> (daysLeft &lt;= 0) <span class="kw">return</span> 0;
+    <span class="kw">return</span> remaining ~/ daysLeft;
+  }
+}</pre>
+  </div>
+  <div class="section">
+    <div class="section-title">测试用例（手算预期）</div>
+    <pre"><span class="cmt">// 预算 100000 分(¥1000)，已过 15 天花了 60000 分(¥600)，月 30 天</span>
+<span class="cmt">// dailyAvg = 60000 ~/ 15 = 4000；projected = 4000 * 30 = 120000 (¥1200)</span>
+<span class="cmt">// 超支：120000 &gt; 100000 → true，overage = 20000 (¥200)</span>
+<span class="cmt">// 建议日均 = (100000-60000) ~/ (30-15) = 40000 ~/ 15 = 2666 (¥26.66)</span>
+test(<span class="str">'predict overspend'</span>, () {
+  <span class="kw">expect</span>(BudgetPredictor.predictMonthEndCents(60000, 15, 30), 120000);
+  <span class="kw">expect</span>(BudgetPredictor.willOverspend(120000, 100000), <span class="kw">true</span>);
+  <span class="kw">expect</span>(BudgetPredictor.suggestedDailyCents(100000, 60000, 15, 30), 2666);
+});</pre>
+  </div>
+  <div class="section">
+    <div class="section-title">实现要点</div>
+    <ul>
+      <li>预算页顶部：预测超支显示橙/红提醒卡，含预测金额和日均建议</li>
+      <li>未超支显示绿色「节奏良好」</li>
+      <li>每天记账后实时刷新预测</li>
+    </ul>
+  </div>
+  <div class="check">
+    <div class="section-title">✅ 验收标准</div>
+    <ul>
+      <li><code>flutter test test/core/budget_predictor_test.dart</code> 全绿</li>
+      <li>预测算法正确（手动验证上述用例）</li>
+      <li>超支卡显示预测金额 + 日均建议</li>
+      <li>记账后预测实时刷新</li>
+    </ul>
+  </div>
+</div>
+
+<!-- T3.3 -->
+<div class="task dep">
+  <h4><span class="task-id">T3.3</span>日历视图 <span class="tag tag-p1">P1</span></h4>
+  <div class="meta">
+    <span>⏱ 3-4h</span>
+    <span>📁 presentation/calendar/</span>
+    <span>🔒 依赖 T1.5（可并行）</span>
+  </div>
+  <div class="deps"><span class="dep-chip">T1.5</span></div>
+  <div class="section">
+    <div class="section-title">目标</div>
+    <p>月历网格，每天显示支出额，点某天看当日明细。</p>
+  </div>
+  <div class="section">
+    <div class="section-title">要创建的文件</div>
+    <ul>
+      <li><code>lib/presentation/calendar/calendar_page.dart</code></li>
+      <li><code>lib/presentation/calendar/widgets/calendar_grid.dart</code></li>
+      <li><code>lib/presentation/calendar/widgets/day_detail_sheet.dart</code></li>
+    </ul>
+  </div>
+  <div class="callout">
+    <div class="callout-title">性能注意</div>
+    不要每天单独查库。用 <code>getMonthByDay</code> 一次查出整月 Map&lt;int,int&gt;（天→分），网格从 Map 取值渲染。
+  </div>
+  <div class="check">
+    <div class="section-title">✅ 验收标准</div>
+    <ul>
+      <li>日历网格正确，有支出日显示金额（formatYuan）</li>
+      <li>今天高亮，点某天弹当日明细</li>
+      <li>月份切换正常</li>
+    </ul>
+  </div>
+</div>
+
+<!-- T3.4 -->
+<div class="task dep">
+  <h4><span class="task-id">T3.4</span>报表页（饼图 + 趋势图） <span class="tag tag-p1">P1</span></h4>
+  <div class="meta">
+    <span>⏱ 3-4h</span>
+    <span>📁 presentation/report/</span>
+    <span>🔒 依赖 T1.5（可并行）</span>
+  </div>
+  <div class="deps"><span class="dep-chip">T1.5</span></div>
+  <div class="section">
+    <div class="section-title">目标</div>
+    <p>收支总览 + fl_chart 饼图（分类占比）+ 柱状图（每日趋势）。<b>数据是 int 分，喂给图表时转 double 仅用于绘制</b>。</p>
+  </div>
+  <div class="section">
+    <div class="section-title">要创建的文件</div>
+    <ul>
+      <li><code>lib/presentation/report/report_page.dart</code></li>
+      <li><code>lib/presentation/report/widgets/category_pie_chart.dart</code></li>
+      <li><code>lib/presentation/report/widgets/daily_trend_chart.dart</code></li>
+    </ul>
+  </div>
+  <div class="section">
+    <div class="section-title">实现要点</div>
+    <ul>
+      <li>顶部总览：当月支出/收入/结余，formatYuan</li>
+      <li>饼图各分类占比，颜色对应分类色，中心显示总支出</li>
+      <li>趋势柱状图 X 轴 1-31 日，Y 轴金额，柱高=当日支出</li>
+      <li>支出/收入 Tab 切换</li>
+    </ul>
+  </div>
+  <div class="check">
+    <div class="section-title">✅ 验收标准</div>
+    <ul>
+      <li>饼图/趋势图正确，数据与明细一致</li>
+      <li>月份切换刷新</li>
+      <li><b>第 3 周里程碑：预算+日历+报表完成</b></li>
+    </ul>
+  </div>
+</div>
+
+<!-- ==================== WEEK 4 ==================== -->
+
+<h2><span class="wk">第 4 周</span>设置页 + CSV 导出 + 测试打包</h2>
+<p>本周目标：完善设置页、CSV 导出，全面测试打包。MVP 可用。<b>注意：设置页里导入/Widget/应用锁/备份入口显示「V1/加固阶段」，不实现</b>。</p>
+
+<!-- T4.1 -->
+<div class="task dep">
+  <h4><span class="task-id">T4.1</span>我的/设置页 <span class="tag tag-p1">P1</span></h4>
+  <div class="meta">
+    <span>⏱ 2-3h</span>
+    <span>📁 presentation/settings/</span>
+    <span>🔒 依赖 T1.5</span>
+  </div>
+  <div class="deps"><span class="dep-chip">T1.5</span></div>
+  <div class="section">
+    <div class="section-title">目标</div>
+    <p>设置页整合：记账统计、主题、分类/账户管理、CSV 导出。其他入口占位提示阶段。</p>
+  </div>
+  <div class="section">
+    <div class="section-title">要创建的文件</div>
+    <ul>
+      <li><code>lib/presentation/settings/settings_page.dart</code></li>
+      <li><code>lib/presentation/settings/widgets/settings_tile.dart</code></li>
+    </ul>
+  </div>
+  <div class="section">
+    <div class="section-title">菜单项（MVP 实现 vs 占位）</div>
+    <ul>
+      <li>📊 记账统计：总记录数、记账天数、连续记账天数 — <b>MVP 实现</b></li>
+      <li>🎨 主题外观：5 套主题 — <b>MVP 实现</b></li>
+      <li>▦ 分类管理：查看列表（含归档分类） — <b>MVP 实现</b></li>
+      <li>💳 账户管理：查看 — <b>MVP 实现</b></li>
+      <li>⤒ 导出 CSV → 调 T4.2 — <b>MVP 实现</b></li>
+      <li>⤓ 导入数据 → 提示「V1 迭代」 — <b>占位</b></li>
+      <li>▣ 桌面 Widget → 提示「V1 迭代」 — <b>占位</b></li>
+      <li>🔒 应用锁 → 提示「加固阶段」 — <b>占位</b></li>
+      <li>💾 数据备份 → 提示「加固阶段」 — <b>占位</b></li>
+      <li>ℹ 关于：v0.1.0-MVP</li>
+    </ul>
+  </div>
+  <div class="check">
+    <div class="section-title">✅ 验收标准</div>
+    <ul>
+      <li>记账统计、主题、分类/账户管理、CSV 导出入口可用</li>
+      <li>占位项点按提示对应阶段，不 crash</li>
+    </ul>
+  </div>
+</div>
+
+<!-- T4.2 -->
+<div class="task dep">
+  <h4><span class="task-id">T4.2</span>CSV 导出 <span class="tag tag-p1">P1</span></h4>
+  <div class="meta">
+    <span>⏱ 1-2h</span>
+    <span>📁 data/export/</span>
+    <span>🔒 依赖 T1.5</span>
+  </div>
+  <div class="deps"><span class="dep-chip">T1.5</span></div>
+  <div class="section">
+    <div class="section-title">目标</div>
+    <p>导出全部或按月记录为 CSV。<b>导出金额列写元（分/100）方便人读，或单独一列写分</b>。建议：金额列=元(2位小数)，并加 amountCents 列=分。</p>
+  </div>
+  <div class="section">
+    <div class="section-title">要创建的文件</div>
+    <ul>
+      <li><code>lib/data/export/csv_exporter.dart</code></li>
+    </ul>
+  </div>
+  <div class="section">
+    <div class="section-title">导出格式</div>
+    <pre>日期,类型,分类,金额(元),金额(分),备注,商户,来源
+2026-07-05,expense,餐饮,12.34,1234,午饭,,manual</pre>
+  </div>
+  <div class="check">
+    <div class="section-title">✅ 验收标准</div>
+    <ul>
+      <li>导出 CSV Excel 打开正常</li>
+      <li>导出条数与 DB 一致</li>
+      <li>文件名 <code>记一笔_202607.csv</code></li>
+    </ul>
+  </div>
+</div>
+
+<!-- T4.3 -->
+<div class="task dep">
+  <h4><span class="task-id">T4.3</span>整体测试 + 打磨 + Release 构建 <span class="tag tag-p0">P0 收尾</span></h4>
+  <div class="meta">
+    <span>⏱ 4-5h</span>
+    <span>📁 全项目</span>
+    <span>🔒 依赖 T4.1 + T4.2</span>
+  </div>
+  <div class="deps"><span class="dep-chip">T4.1</span><span class="dep-chip">T4.2</span></div>
+  <div class="section">
+    <div class="section-title">目标</div>
+    <p>全面自测、修 bug、优化，生成 Release APK。MVP 可日常用（测试数据）。</p>
+  </div>
+  <div class="section">
+    <div class="section-title">自动化测试</div>
+    <ul>
+      <li><code>flutter test</code> 全绿（T1.6 + T3.2 测试）</li>
+      <li>金额边界回归：0 分、1 分、极大值求和</li>
+    </ul>
+  </div>
+  <div class="section">
+    <div class="section-title">集成测试清单（手测）</div>
+    <ul>
+      <li>📝 记账全流程：支出/收入 → 保存 → 明细可见 → 编辑 → 删除，金额显示 ¥12.34 正确</li>
+      <li>📅 月份切换所有页面同步</li>
+      <li>📊 报表数据与明细一致</li>
+      <li>💰 预算设置 → 超支预测 → 提醒显示</li>
+      <li>📅 日历点击 → 当日明细</li>
+      <li>🎨 5 套主题切换所有页面/图表正确</li>
+      <li>⤒ 导出 CSV 格式正确</li>
+      <li>▣ 占位项提示正确（导入/Widget/锁/备份）</li>
+    </ul>
+  </div>
+  <div class="section">
+    <div class="section-title">打磨项</div>
+    <ul>
+      <li>App 图标启动页（launcher_icon 生成）</li>
+      <li>空状态优化</li>
+      <li>数字千分位、日期格式化</li>
+      <li><b>全局搜索确认无 <code>print</code>，全部走 AppLogger</b></li>
+      <li>检查内存泄漏（列表 dispose）</li>
+    </ul>
+  </div>
+  <div class="section">
+    <div class="section-title">Release 构建</div>
+    <pre>flutter build apk --release
+<span class="cmt"># 或拆分 ABI</span>
+flutter build apk --split-per-abi --release</pre>
+  </div>
+  <div class="check">
+    <div class="section-title">✅ 验收标准</div>
+    <ul>
+      <li><code>flutter test</code> 全绿</li>
+      <li>集成测试清单全过，无 crash</li>
+      <li>Release APK 生成成功，安装功能正常</li>
+      <li><b>🎯 MVP 完成！可用测试数据日常记账</b></li>
+      <li><b>⚠️ 正式放真实数据前，须完成加固阶段 S1-S3</b></li>
+    </ul>
+  </div>
+</div>
+
+<!-- ==================== 加固阶段 ==================== -->
+
+<h2><span class="wk sec">上线前加固</span>隐私与安全（正式自用前必做）</h2>
+<p>目标：在把真实记账数据放进 App 之前，确保应用锁、日志脱敏、备份保护就位。<b>顺序：S1 → S2 → S3</b>。</p>
+
+<div class="warn">
+  <div class="warn-title">为什么这一段独立成阶段</div>
+  MVP 可以用测试数据验证功能，但真实记账数据是隐私敏感的。应用锁、日志脱敏、备份保护是「放真实数据」的前置门槛，不是普通功能迭代。
+</div>
+
+<!-- S1 -->
+<div class="task sec">
+  <h4><span class="task-id">S1</span>敏感日志禁止 + AppLogger 规范 <span class="tag tag-p0">P0 加固</span></h4>
+  <div class="meta">
+    <span>⏱ 2h</span>
+    <span>📁 core/logger.dart + 全项目</span>
+    <span>🔒 依赖 MVP 完成</span>
+  </div>
+  <div class="deps"><span class="dep-chip">T4.3</span></div>
+  <div class="section">
+    <div class="section-title">目标</div>
+    <p>把 T1.2 留的 AppLogger 空壳填充为正式实现，并全项目排查日志泄露。</p>
+  </div>
+  <div class="section">
+    <div class="section-title">AppLogger 实现要点</div>
+    <ul>
+      <li><code>AppLogger.d(tag, msg)</code> 内部：<code>if (kDebugMode) debugPrint('[$tag] $msg');</code>，release 静默</li>
+      <li>提供 <code>AppLogger.record(String action, int id)</code> 只记 id/动作，<b>不记金额/备注/商户</b></li>
+      <li>全局搜索 <code>print(</code>、<code>debugPrint(</code>，全部替换为 AppLogger 或删除</li>
+      <li>排查：<code>Record.toString()</code>、异常 toString 是否含敏感字段；有则在日志中只打 id</li>
+    </ul>
+  </div>
+  <div class="check">
+    <div class="section-title">✅ 验收标准</div>
+    <ul>
+      <li>release 构建无任何金额/备注/商户日志输出</li>
+      <li>全局无裸 <code>print</code></li>
+      <li>debug 日志只出现在 kDebugMode</li>
+    </ul>
+  </div>
+</div>
+
+<!-- S2 -->
+<div class="task sec">
+  <h4><span class="task-id">S2</span>应用加密锁 <span class="tag tag-p0">P0 加固</span></h4>
+  <div class="meta">
+    <span>⏱ 2-3h</span>
+    <span>📁 core/security/ + presentation/settings/</span>
+    <span>🔒 依赖 S1</span>
+  </div>
+  <div class="deps"><span class="dep-chip">S1</span></div>
+  <div class="section">
+    <div class="section-title">目标</div>
+    <p>local_auth 生物识别锁，App 启动 + 后台回前台校验。设置页开关。T4.1 占位入口接入实现。</p>
+  </div>
+  <div class="section">
+    <div class="section-title">要创建的文件</div>
+    <ul>
+      <li><code>lib/core/security/app_lock_service.dart</code></li>
+      <li><code>lib/presentation/security/app_lock_page.dart</code></li>
+      <li>修改 <code>lib/app.dart</code> — 启动/回前台检查锁状态</li>
+      <li><code>pubspec.yaml</code> 添加 <code>local_auth ^2.2.0</code></li>
+    </ul>
+  </div>
+  <div class="section">
+    <div class="section-title">实现要点</div>
+    <ul>
+      <li>开关存 shared_preferences: appLockEnabled</li>
+      <li>启动时若开启 → 锁屏 → 生物识别 → 进主页</li>
+      <li>用 <code>WidgetsBindingObserver</code> 监听 <code>AppLifecycleState.resumed</code>，回前台也校验</li>
+      <li>首次开启需先验证一次</li>
+      <li>设备不支持生物识别时给提示，开关不可开</li>
+    </ul>
+  </div>
+  <div class="check">
+    <div class="section-title">✅ 验收标准</div>
+    <ul>
+      <li>设置页开关应用锁</li>
+      <li>开启后重启需生物识别</li>
+      <li>后台回前台需重新解锁</li>
+      <li>不支持时给提示</li>
+    </ul>
+  </div>
+</div>
+
+<!-- S3 -->
+<div class="task sec">
+  <h4><span class="task-id">S3</span>数据备份与恢复（受保护） <span class="tag tag-p1">P1 加固</span></h4>
+  <div class="meta">
+    <span>⏱ 2-3h</span>
+    <span>📁 data/backup/ + presentation/settings/</span>
+    <span>🔒 依赖 S2</span>
+  </div>
+  <div class="deps"><span class="dep-chip">S2</span></div>
+  <div class="section">
+    <div class="section-title">目标</div>
+    <p>本地备份 SQLite db 文件；恢复覆盖。<b>受应用锁保护</b>：导出/恢复前必须先通过生物识别。</p>
+  </div>
+  <div class="section">
+    <div class="section-title">要创建的文件</div>
+    <ul>
+      <li><code>lib/data/backup/backup_service.dart</code></li>
+      <li><code>lib/presentation/settings/backup_page.dart</code></li>
+    </ul>
+  </div>
+  <div class="section">
+    <div class="section-title">实现要点</div>
+    <ul>
+      <li><b>备份</b>：先 <code>AppLockService.verify()</code> → 关库 → 复制 db 到 Downloads → <code>记一笔_backup_20260706.db</code></li>
+      <li><b>恢复</b>：先生物识别 → 选文件 → 二次确认「恢复将覆盖当前数据」→ 关库 → 覆盖 → 重开 → 刷新所有 Provider</li>
+      <li>备份文件名含日期，恢复前校验文件合法性（魔数）</li>
+      <li>用 path_provider 取 db 路径，file_picker 选恢复文件（<code>pubspec.yaml</code> 此时加 file_picker）</li>
+    </ul>
+  </div>
+  <div class="callout">
+    <div class="callout-title">备份文件安全提醒</div>
+    本地 .db 明文备份有泄露风险。当前方案靠应用锁 + 用户自己保管文件。未来 V2 可加 SQLCipher 加密 db 或备份文件加密。文档中标注此限制。
+  </div>
+  <div class="check">
+    <div class="section-title">✅ 验收标准</div>
+    <ul>
+      <li>备份需先通过生物识别</li>
+      <li>备份 .db 含全部数据</li>
+      <li>恢复前生物识别 + 二次确认</li>
+      <li>恢复后数据正确还原，Provider 刷新</li>
+      <li><b>🔒 加固阶段完成，可放入真实数据</b></li>
+    </ul>
+  </div>
+</div>
+
+<!-- ==================== V1 迭代 ==================== -->
+
+<h2><span class="wk v1">V1 迭代</span>CSV 导入 + 桌面 Widget</h2>
+<p>目标：MVP 跑顺后，补上鲨鱼记账数据迁移和桌面快捷入口。</p>
+
+<!-- V1.1 -->
+<div class="task v1">
+  <h4><span class="task-id">V1.1</span>CSV 导入（鲨鱼记账迁移） <span class="tag tag-p1">P1</span></h4>
+  <div class="meta">
+    <span>⏱ 3-4h</span>
+    <span>📁 data/import/</span>
+    <span>🔒 依赖 MVP 完成（含去重：sourceId）</span>
+  </div>
+  <div class="deps"><span class="dep-chip">T1.4</span></div>
+  <div class="section">
+    <div class="section-title">目标</div>
+    <p>从鲨鱼记账导出 CSV 导入历史数据。去重依赖 records.sourceId 唯一约束（已在 MVP 建好）。</p>
+  </div>
+  <div class="section">
+    <div class="section-title">要创建的文件</div>
+    <ul>
+      <li><code>lib/data/import/csv_importer.dart</code></li>
+      <li><code>lib/data/import/category_mapping.dart</code></li>
+      <li><code>lib/presentation/settings/import_page.dart</code></li>
+      <li><code>test/data/csv_importer_test.dart</code> — <b>去重测试必写</b></li>
+      <li><code>pubspec.yaml</code> 添加 <code>file_picker ^8.0.0</code></li>
+    </ul>
+  </div>
+  <div class="section">
+    <div class="section-title">导入流程</div>
+    <ul>
+      <li>file_picker 选 CSV → csv 包解析（日期/分类/金额/备注）</li>
+      <li>分类映射（鲨鱼→我们）：饮食→餐饮 等 20+ 别名，未匹配→其他</li>
+      <li>金额：负数=支出/正数=收入，元→分 <code>yuanToCents</code></li>
+      <li><b>去重键</b>：sourceId = <code>sha1(source|date|type|amountCents|categoryId|noteNormalized|merchantNormalized)</code>，note/merchant 取 trim+lowercase，空则空串。调 <code>batchInsertIfNew</code>（T1.4 已实现），DB 唯一约束兜底</li>
+      <li>预览「共 N 条，新增 M，跳过 K 重复」+ 前 10 条</li>
+      <li>确认 → 写入 source='csv'</li>
+    </ul>
+  </div>
+  <div class="check">
+    <div class="section-title">✅ 验收标准</div>
+    <ul>
+      <li>解析正确，分类映射正确</li>
+      <li>重复导入同文件不产生重复数据（sourceId 去重）</li>
+      <li>去重测试 <code>flutter test</code> 全绿</li>
+      <li>导入后明细页可见，source 显示「导入」</li>
+    </ul>
+  </div>
+</div>
+
+<!-- V1.2 -->
+<div class="task v1">
+  <h4><span class="task-id">V1.2</span>桌面 Widget 快捷记账 <span class="tag tag-p1">P1 差异化</span></h4>
+  <div class="meta">
+    <span>⏱ 3-4h</span>
+    <span>📁 android/ + core/</span>
+    <span>🔒 依赖 T2.2</span>
+  </div>
+  <div class="deps"><span class="dep-chip">T2.2</span></div>
+  <div class="section">
+    <div class="section-title">目标</div>
+    <p>Android 桌面 2×2 Widget，点击直达记账弹层，跳过找 app/开 app/点+ 三步。</p>
+  </div>
+  <div class="section">
+    <div class="section-title">要创建/修改的文件</div>
+    <ul>
+      <li><code>android/app/.../HomeWidgetProvider.java</code></li>
+      <li><code>android/app/res/layout/home_widget.xml</code></li>
+      <li><code>android/app/.../AndroidManifest.xml</code> — 注册 Widget + Deep Link</li>
+      <li><code>lib/core/deep_link_handler.dart</code></li>
+      <li>修改 <code>lib/app.dart</code> — 处理 Deep Link 打开 editor_sheet</li>
+      <li><code>pubspec.yaml</code> 添加 <code>home_widget ^0.6.0</code></li>
+    </ul>
+  </div>
+  <div class="section">
+    <div class="section-title">实现要点</div>
+    <ul>
+      <li>Widget 2×2：当日支出（formatYuan）+「记一笔」</li>
+      <li>点击 → Deep Link <code>jiyibi://editor</code> → Flutter 接收后直接弹 editor_sheet</li>
+      <li>home_widget 包更新当日支出，每次记账后刷新</li>
+      <li>AndroidManifest 注册 appwidget_provider</li>
+    </ul>
+  </div>
+  <div class="check">
+    <div class="section-title">✅ 验收标准</div>
+    <ul>
+      <li>桌面可添加「记一笔」Widget</li>
+      <li>Widget 显示当日支出</li>
+      <li>点击直达记账弹层（不经主页）</li>
+      <li>记账后 Widget 金额更新</li>
+    </ul>
+  </div>
+</div>
+
+<!-- ==================== APPENDIX ==================== -->
+
+<h2>附录 A：项目约定（v2）</h2>
+<table>
+  <tr><th>约定</th><th>说明</th></tr>
+  <tr><td>命名</td><td>文件 snake_case，类 PascalCase，变量 camelCase</td></tr>
+  <tr><td>状态管理</td><td>统一 Riverpod，不用 setState（简单叶子组件除外）</td></tr>
+  <tr><td>数据库</td><td>所有操作走 Repository，UI 不直接碰 Database</td></tr>
+  <tr><td><b>金额</b></td><td><b>int 分存储</b>（amountCents/balanceCents），禁止 double 运算金额。显示用 MoneyUtils.formatYuan，录入用 yuanToCents</td></tr>
+  <tr><td>归档</td><td>分类/账户软删除（archived），不物理删除</td></tr>
+  <tr><td>约束</td><td>categories unique(name,type)，accounts unique(name)，budgets unique(month,categoryId)</td></tr>
+  <tr><td>日志</td><td>禁止 print，全走 AppLogger；日志不含金额/备注/商户；release 关 debug 日志</td></tr>
+  <tr><td>主题色</td><td>所有颜色走 ColorScheme/ThemeData，不写死</td></tr>
+  <tr><td>语义色</td><td>支出=#D85A30，收入=#3B6D11，所有主题不变</td></tr>
+  <tr><td>提交</td><td>每 Task 单独 commit：feat(T1.3)/test(T1.6)/fix(...)</td></tr>
+</table>
+
+<h2>附录 B：环境搭建命令速查</h2>
+<pre><span class="cmt"># 1. 确认 Flutter 环境</span>
+flutter doctor
+
+<span class="cmt"># 2. 创建项目（Android 单平台先行）</span>
+flutter create --org com.personal --platforms android jiyibi
+cd jiyibi
+
+<span class="cmt"># 3. 添加依赖 + flutter pub get</span>
+
+<span class="cmt"># 4. 代码生成（drift）</span>
+dart run build_runner build
+
+<span class="cmt"># 5. 开发运行</span>
+flutter run
+
+<span class="cmt"># 6. 跑测试</span>
+flutter test
+
+<span class="cmt"># 7. Release 构建</span>
+flutter build apk --release</pre>
+
+<h2>附录 C：给 AI 的 Prompt 模板</h2>
+<div class="callout">
+  <div class="callout-title">每个 Task 发给 AI 时用这个模板</div>
+</div>
+<pre><span class="cmt">你是一个 Flutter 开发专家。请按任务规格实现代码。
+
+## 项目背景
+记账 App「记一笔」，技术栈 Flutter + Riverpod + drift + fl_chart，Android 单平台先行。
+项目目录：lib/ 下 core/data/presentation/shared 四层。
+状态管理统一 Riverpod，数据库走 Repository。
+<b>金额一律 int 分（amountCents），禁止 double 运算金额，显示用 MoneyUtils.formatYuan</b>。
+分类/账户软删除（archived），不物理删除。
+日志禁止 print，全走 AppLogger；日志不含金额/备注/商户。
+CLAUDE.md 是项目上下文，含完整约定，请遵循。
+
+## 当前任务
+[T1.3] drift 数据库定义（新字段+约束+归档）
+
+## 任务要求
+[粘贴对应 Task 全部内容]
+
+## 约束
+- 只创建/修改任务规格列出的文件
+- 金额用 int 分
+- 代码需编译通过
+- 遵循项目命名约定
+
+## 输出
+直接给出每个文件完整代码，不省略。</span></pre>
+
+<div style="margin-top:48px;padding:24px;background:#fff;border-radius:10px;border:1px solid #E8E6DE;text-align:center;color:#888780;font-size:14px;">
+  <b style="color:#0F6E56;">记一笔 MVP 开发任务清单 v2</b><br>
+  MVP 16 任务 + 加固 3 任务 + V1 迭代 2 任务 · 金额改 int 分 · 补字段/约束/测试/隐私<br>
+  <span style="font-size:12px;">更新于 2026-07-06 · 收缩版 MVP + 上线前加固 + V1 迭代</span>
+</div>
+
+</div>
+</body>
+</html>
