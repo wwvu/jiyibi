@@ -1,0 +1,695 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>记一笔 · 全量产品与 UI 优化说明</title>
+  <style>
+    :root {
+      --bg: #f5f7f6;
+      --surface: #ffffff;
+      --surface-2: #edf3f0;
+      --ink: #17211e;
+      --muted: #66736e;
+      --line: #d9e2de;
+      --primary: #0f6e56;
+      --primary-soft: #d9eee7;
+      --expense: #d85a30;
+      --income: #3b6d11;
+      --amber: #ba7517;
+      --blue: #185fa5;
+      --purple: #7f77dd;
+      --danger: #a32d2d;
+      --shadow: 0 18px 46px rgba(30, 52, 45, .12);
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      color: var(--ink);
+      background: var(--bg);
+      font: 15px/1.65 -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+      letter-spacing: 0;
+    }
+
+    button { font: inherit; }
+    a { color: inherit; }
+    .shell { max-width: 1240px; margin: 0 auto; padding: 0 28px 72px; }
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      min-height: 64px;
+      padding: 0 28px;
+      background: rgba(245, 247, 246, .94);
+      border-bottom: 1px solid var(--line);
+      backdrop-filter: blur(14px);
+    }
+    .brand { display: flex; gap: 11px; align-items: center; font-weight: 800; }
+    .brand-mark {
+      display: grid;
+      place-items: center;
+      width: 34px;
+      height: 34px;
+      border-radius: 10px;
+      color: white;
+      background: var(--primary);
+      font-size: 18px;
+    }
+    .topnav { display: flex; gap: 20px; color: var(--muted); font-size: 13px; }
+    .topnav a { text-decoration: none; }
+    .topnav a:hover { color: var(--primary); }
+
+    .hero {
+      display: grid;
+      grid-template-columns: 1.25fr .75fr;
+      gap: 40px;
+      align-items: end;
+      padding: 72px 0 48px;
+      border-bottom: 1px solid var(--line);
+    }
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--primary);
+      font-size: 13px;
+      font-weight: 800;
+    }
+    .eyebrow::before { content: ""; width: 22px; height: 3px; border-radius: 2px; background: var(--primary); }
+    h1 { margin: 12px 0 16px; font-size: clamp(38px, 6vw, 70px); line-height: 1.08; letter-spacing: 0; }
+    .hero p { max-width: 720px; margin: 0; color: var(--muted); font-size: 18px; }
+    .commit-box {
+      padding: 20px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--surface);
+    }
+    .commit-box small { color: var(--muted); }
+    .commit-id { margin-top: 6px; font: 700 14px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace; color: var(--primary); }
+
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin: 28px 0 72px;
+    }
+    .metric {
+      padding: 20px;
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+    }
+    .metric strong { display: block; font-size: 30px; line-height: 1.1; }
+    .metric span { color: var(--muted); font-size: 13px; }
+
+    section { padding: 56px 0; border-top: 1px solid var(--line); }
+    section:first-of-type { border-top: 0; }
+    .section-head { display: flex; justify-content: space-between; gap: 24px; align-items: end; margin-bottom: 26px; }
+    .section-head h2 { margin: 0 0 5px; font-size: 30px; line-height: 1.2; }
+    .section-head p { max-width: 680px; margin: 0; color: var(--muted); }
+
+    .strategy {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+    .strategy-card {
+      padding: 24px;
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+    }
+    .strategy-card.old { border-left: 4px solid var(--muted); }
+    .strategy-card.new { border-left: 4px solid var(--primary); }
+    .strategy-card h3 { margin: 0 0 10px; font-size: 18px; }
+    .strategy-card p { margin: 0; color: var(--muted); }
+    .arrow-line { margin: 12px 0; color: var(--primary); font-weight: 800; }
+
+    .theme-switcher { display: flex; flex-wrap: wrap; gap: 8px; }
+    .theme-button {
+      display: inline-flex;
+      gap: 8px;
+      align-items: center;
+      padding: 8px 11px;
+      color: var(--muted);
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    .theme-button.active { color: var(--ink); border-color: var(--primary); box-shadow: inset 0 0 0 1px var(--primary); }
+    .swatch { width: 13px; height: 13px; border-radius: 4px; background: var(--swatch); }
+
+    .phone-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 24px;
+      align-items: start;
+    }
+    .phone-wrap h3 { margin: 0 0 10px; font-size: 16px; }
+    .phone-wrap > p { min-height: 48px; margin: 0 0 16px; color: var(--muted); font-size: 13px; }
+    .phone {
+      --phone-bg: #f7f9f8;
+      position: relative;
+      overflow: hidden;
+      width: min(100%, 360px);
+      height: 718px;
+      margin: 0 auto;
+      padding: 15px 14px 76px;
+      background: var(--phone-bg);
+      border: 7px solid #1d2724;
+      border-radius: 36px;
+      box-shadow: var(--shadow);
+    }
+    .phone::before {
+      content: "";
+      position: absolute;
+      top: 8px;
+      left: 50%;
+      width: 58px;
+      height: 5px;
+      border-radius: 4px;
+      background: #1d2724;
+      transform: translateX(-50%);
+      opacity: .85;
+    }
+    .status { display: flex; justify-content: space-between; padding: 4px 4px 12px; font-size: 10px; font-weight: 800; }
+    .app-head { display: flex; justify-content: space-between; align-items: center; margin: 3px 2px 14px; }
+    .app-head h4 { margin: 0; font-size: 21px; line-height: 1.2; }
+    .app-head p { margin: 3px 0 0; color: var(--muted); font-size: 11px; }
+    .avatar {
+      display: grid;
+      place-items: center;
+      width: 38px;
+      height: 38px;
+      color: var(--primary);
+      background: var(--primary-soft);
+      border-radius: 13px;
+      font-weight: 900;
+    }
+    .app-card {
+      padding: 14px;
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+    }
+    .app-card + .app-card { margin-top: 10px; }
+    .pulse { background: var(--primary-soft); border-color: color-mix(in srgb, var(--primary) 28%, transparent); }
+    .pulse-top { display: flex; gap: 10px; align-items: center; }
+    .pulse-icon {
+      display: grid;
+      place-items: center;
+      width: 34px;
+      height: 34px;
+      border-radius: 11px;
+      color: var(--primary);
+      background: color-mix(in srgb, var(--primary) 12%, white);
+      font-weight: 900;
+    }
+    .tiny { color: var(--muted); font-size: 10px; }
+    .pulse strong { font-size: 17px; }
+    .pulse-copy { margin: 10px 0 12px; font-size: 11px; }
+    .two-metric, .three-metric { display: grid; gap: 8px; }
+    .two-metric { grid-template-columns: 1fr 1fr; }
+    .three-metric { grid-template-columns: repeat(3, 1fr); }
+    .data-label { color: var(--muted); font-size: 9px; }
+    .data-value { margin-top: 2px; font-size: 12px; font-weight: 850; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .progress { height: 6px; margin-top: 10px; overflow: hidden; border-radius: 6px; background: color-mix(in srgb, var(--primary) 14%, white); }
+    .progress i { display: block; width: var(--value, 48%); height: 100%; background: var(--primary); border-radius: inherit; }
+    .quick { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 10px 0 18px; }
+    .quick div { padding: 10px 4px; text-align: center; color: var(--primary); background: var(--surface-2); border-radius: 13px; font-size: 10px; font-weight: 800; }
+    .mini-title { display: flex; justify-content: space-between; align-items: end; margin: 16px 2px 8px; }
+    .mini-title strong { font-size: 14px; }
+    .mini-title span { color: var(--primary); font-size: 10px; font-weight: 800; }
+    .insight-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .insight { min-height: 92px; padding: 12px; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; }
+    .insight b { display: block; margin-top: 12px; }
+    .record { display: flex; align-items: center; gap: 9px; padding: 9px 0; }
+    .record + .record { border-top: 1px solid var(--line); }
+    .cat {
+      display: grid;
+      place-items: center;
+      flex: 0 0 34px;
+      height: 34px;
+      color: var(--amber);
+      background: color-mix(in srgb, var(--amber) 12%, white);
+      border-radius: 11px;
+      font-size: 11px;
+      font-weight: 900;
+    }
+    .record-main { min-width: 0; flex: 1; }
+    .record-main b, .record-main small { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .record-main b { font-size: 11px; }
+    .record-main small { color: var(--muted); font-size: 9px; }
+    .money { color: var(--expense); font-size: 11px; font-weight: 900; }
+    .money.income { color: var(--income); }
+
+    .nav {
+      position: absolute;
+      right: 0;
+      bottom: 0;
+      left: 0;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      height: 62px;
+      padding-top: 7px;
+      background: var(--surface);
+      border-top: 1px solid var(--line);
+    }
+    .nav span { text-align: center; color: var(--muted); font-size: 9px; }
+    .nav span::before { content: ""; display: block; width: 18px; height: 14px; margin: 0 auto 4px; border: 2px solid currentColor; border-radius: 5px; }
+    .nav .active { color: var(--primary); font-weight: 800; }
+    .fab {
+      position: absolute;
+      right: 50%;
+      bottom: 53px;
+      display: grid;
+      place-items: center;
+      width: 48px;
+      height: 48px;
+      color: white;
+      background: var(--primary);
+      border: 4px solid var(--phone-bg);
+      border-radius: 16px;
+      transform: translateX(50%);
+      font-size: 25px;
+      font-weight: 400;
+      box-shadow: 0 8px 20px rgba(15, 110, 86, .24);
+    }
+
+    .page-title { display: flex; align-items: center; gap: 10px; margin: 6px 0 12px; }
+    .page-title b { font-size: 18px; }
+    .back { color: var(--muted); font-size: 22px; }
+    .month-switch { display: inline-flex; gap: 12px; align-items: center; padding: 6px 10px; background: var(--surface-2); border-radius: 12px; font-size: 10px; font-weight: 800; }
+    .budget-hero .big { margin: 2px 0 12px; color: var(--expense); font-size: 28px; font-weight: 900; }
+    .budget-meta { display: flex; justify-content: space-between; margin-top: 7px; color: var(--muted); font-size: 9px; }
+    .category-budget { display: grid; grid-template-columns: 32px 1fr; gap: 9px; align-items: center; padding: 10px 0; }
+    .category-budget + .category-budget { border-top: 1px solid var(--line); }
+    .category-budget .bar { height: 5px; margin-top: 6px; overflow: hidden; border-radius: 4px; background: var(--surface-2); }
+    .category-budget .bar i { display: block; height: 100%; width: var(--value); border-radius: inherit; background: var(--bar); }
+    .category-budget .line { display: flex; justify-content: space-between; gap: 4px; font-size: 10px; }
+    .category-budget .line small { color: var(--muted); }
+
+    .segment { display: grid; grid-template-columns: 1fr 1fr; gap: 3px; width: 144px; padding: 3px; background: var(--surface-2); border-radius: 11px; }
+    .segment span { padding: 6px; text-align: center; border-radius: 8px; color: var(--muted); font-size: 9px; font-weight: 800; }
+    .segment .active { color: white; background: var(--expense); }
+    .narrative { display: flex; gap: 10px; background: color-mix(in srgb, var(--expense) 8%, white); border-color: color-mix(in srgb, var(--expense) 18%, white); }
+    .narrative b { display: block; color: var(--expense); font-size: 10px; }
+    .narrative p { margin: 3px 0 0; font-size: 11px; }
+    .donut-wrap { display: grid; place-items: center; padding: 16px 0; }
+    .donut {
+      display: grid;
+      place-items: center;
+      width: 126px;
+      height: 126px;
+      border-radius: 50%;
+      background: conic-gradient(var(--amber) 0 42%, var(--blue) 42% 65%, var(--expense) 65% 83%, var(--purple) 83% 100%);
+    }
+    .donut::after { content: "总支出\A ¥2,486"; white-space: pre; display: grid; place-items: center; width: 76px; height: 76px; text-align: center; border-radius: 50%; background: var(--surface); font-size: 10px; font-weight: 800; }
+    .rank { display: grid; grid-template-columns: 14px 42px 1fr 54px; gap: 6px; align-items: center; padding: 7px 0; font-size: 9px; }
+    .rank .rbar { height: 5px; background: var(--surface-2); border-radius: 4px; }
+    .rank .rbar i { display: block; width: var(--value); height: 100%; background: var(--bar); border-radius: inherit; }
+    .chart {
+      display: flex;
+      align-items: end;
+      gap: 5px;
+      height: 72px;
+      padding: 8px 4px 0;
+      border-bottom: 1px solid var(--line);
+    }
+    .chart i { flex: 1; height: var(--value); min-height: 3px; background: color-mix(in srgb, var(--expense) 72%, white); border-radius: 4px 4px 0 0; }
+
+    .calendar { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+    .calendar .weekday { padding: 4px 0; text-align: center; color: var(--muted); font-size: 8px; }
+    .day { min-height: 43px; padding: 4px 2px; text-align: center; border-radius: 8px; font-size: 9px; }
+    .day small { display: block; margin-top: 3px; color: var(--expense); font-size: 7px; }
+    .day.h1 { background: color-mix(in srgb, var(--expense) 8%, white); }
+    .day.h2 { background: color-mix(in srgb, var(--expense) 15%, white); }
+    .day.h3 { background: color-mix(in srgb, var(--expense) 23%, white); }
+    .day.h4 { background: color-mix(in srgb, var(--expense) 32%, white); }
+    .day.today b { display: inline-grid; place-items: center; width: 22px; height: 22px; color: white; background: var(--primary); border-radius: 50%; }
+
+    .editor-phone { padding-bottom: 12px; }
+    .sheet {
+      position: absolute;
+      right: 0;
+      bottom: 0;
+      left: 0;
+      min-height: 650px;
+      padding: 10px 14px 14px;
+      background: var(--surface);
+      border-radius: 24px 24px 0 0;
+      box-shadow: 0 -12px 32px rgba(23, 33, 30, .13);
+    }
+    .handle { width: 34px; height: 4px; margin: 0 auto 10px; border-radius: 4px; background: var(--line); }
+    .sheet-head { display: flex; justify-content: space-between; align-items: center; }
+    .sheet-head b { font-size: 16px; }
+    .amount {
+      margin: 12px 0 9px;
+      padding: 12px 14px;
+      text-align: right;
+      background: var(--surface-2);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      font-size: 30px;
+      font-weight: 900;
+    }
+    .category-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 7px; margin: 10px 0; }
+    .category-item { padding: 8px 3px; text-align: center; background: var(--surface-2); border-radius: 13px; font-size: 9px; }
+    .category-item b { display: grid; place-items: center; width: 34px; height: 34px; margin: 0 auto 4px; color: var(--primary); background: var(--primary-soft); border-radius: 11px; }
+    .category-item.active { color: var(--primary); background: var(--primary-soft); font-weight: 800; }
+    .note-field { padding: 10px 12px; color: var(--muted); background: var(--surface-2); border-radius: 12px; font-size: 10px; }
+    .keypad { display: grid; grid-template-columns: repeat(4, 1fr); gap: 7px; margin-top: 12px; }
+    .key { display: grid; place-items: center; min-height: 42px; background: var(--surface-2); border-radius: 12px; font-size: 16px; font-weight: 800; }
+    .key.done { grid-row: span 2; color: white; background: var(--primary); font-size: 11px; }
+
+    .change-table { width: 100%; border-collapse: collapse; background: var(--surface); border: 1px solid var(--line); }
+    .change-table th, .change-table td { padding: 14px 16px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+    .change-table th { color: var(--muted); background: var(--surface-2); font-size: 12px; }
+    .change-table td:first-child { width: 17%; font-weight: 800; }
+    .change-table td:nth-child(2) { width: 30%; color: var(--muted); }
+
+    .system-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+    .system-card { padding: 20px; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; }
+    .system-card h3 { margin: 0 0 12px; font-size: 16px; }
+    .token-line { display: flex; justify-content: space-between; gap: 12px; margin: 8px 0; color: var(--muted); font-size: 13px; }
+    .token-line code { color: var(--ink); }
+    .palette { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+    .color-chip { height: 46px; border-radius: 8px; background: var(--chip); border: 1px solid rgba(0,0,0,.06); }
+
+    .flow { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; align-items: stretch; }
+    .flow-node { position: relative; padding: 18px; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; }
+    .flow-node:not(:last-child)::after { content: "›"; position: absolute; right: -10px; top: 50%; color: var(--primary); font-size: 24px; transform: translate(50%, -50%); }
+    .flow-node b { display: block; margin-bottom: 6px; }
+    .flow-node small { color: var(--muted); }
+
+    .file-groups { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
+    .file-group { min-width: 0; padding: 20px; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; }
+    .file-group h3 { margin: 0 0 10px; font-size: 16px; }
+    .file-group ul { margin: 0; padding-left: 18px; color: var(--muted); }
+    .file-group code { overflow-wrap: anywhere; word-break: break-word; }
+    code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .9em; }
+
+    .checks { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+    .check { padding: 18px; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; }
+    .check b { display: block; color: var(--income); font-size: 18px; }
+    .check span { color: var(--muted); font-size: 12px; }
+    .note { margin-top: 18px; padding: 16px 18px; color: var(--muted); background: var(--surface-2); border-left: 3px solid var(--primary); }
+    footer { padding-top: 34px; text-align: center; color: var(--muted); font-size: 12px; }
+
+    @media (max-width: 960px) {
+      .hero { grid-template-columns: 1fr; }
+      .metrics, .checks { grid-template-columns: repeat(2, 1fr); }
+      .phone-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .system-grid { grid-template-columns: 1fr; }
+      .flow { grid-template-columns: repeat(2, 1fr); }
+      .flow-node:nth-child(2)::after { display: none; }
+    }
+    @media (max-width: 680px) {
+      .shell { padding: 0 16px 54px; }
+      .topbar { padding: 0 16px; }
+      .topnav { display: none; }
+      .hero { padding-top: 44px; }
+      .metrics, .strategy, .phone-grid, .file-groups, .checks, .flow { grid-template-columns: 1fr; }
+      .flow-node::after { display: none; }
+      .section-head { align-items: start; flex-direction: column; }
+      .change-table { table-layout: fixed; }
+      .change-table th, .change-table td {
+        padding: 10px 8px;
+        white-space: normal;
+        word-break: break-word;
+        font-size: 12px;
+      }
+      .phone-wrap > p { min-height: auto; }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand"><span class="brand-mark">记</span><span>记一笔 · 优化交付</span></div>
+    <nav class="topnav">
+      <a href="#preview">界面预览</a>
+      <a href="#changes">改动说明</a>
+      <a href="#system">设计系统</a>
+      <a href="#files">文件清单</a>
+      <a href="#verify">验证结果</a>
+    </nav>
+  </header>
+
+  <main class="shell">
+    <div class="hero">
+      <div>
+        <span class="eyebrow">全量产品与 UI 重构</span>
+        <h1>从记账工具，变成每天可执行的财务仪表盘</h1>
+        <p>本次优化不止调整颜色和卡片，而是重新组织首页、预算、洞察、日历、明细、设置与记账流程，并加入“今日财务气象”和“安心可花”作为产品辨识度核心。</p>
+      </div>
+      <div class="commit-box">
+        <small>交付提交</small>
+        <div class="commit-id">3688911</div>
+        <div>feat(UI): 重构财务气象与全局体验</div>
+      </div>
+    </div>
+
+    <div class="metrics">
+      <div class="metric"><strong>29</strong><span>个文件发生变化</span></div>
+      <div class="metric"><strong>3,495</strong><span>行新增实现</span></div>
+      <div class="metric"><strong>65</strong><span>项自动化测试通过</span></div>
+      <div class="metric"><strong>6</strong><span>个 Android 小屏布局场景</span></div>
+    </div>
+
+    <section>
+      <div class="section-head">
+        <div><h2>产品方向变化</h2><p>解决“功能都有，但没有理由每天打开”的问题。</p></div>
+      </div>
+      <div class="strategy">
+        <article class="strategy-card old">
+          <h3>优化前：流水工具</h3>
+          <p>明细、预算和图表互相独立；首页直接进入账单；用户只能看到“花了多少”，很难知道接下来应该怎么做。</p>
+        </article>
+        <article class="strategy-card new">
+          <h3>优化后：财务节奏助手</h3>
+          <p>首页先告诉用户今天的财务状态、预算进度和安心可花额度，再提供明细证据、预算调整和消费洞察。</p>
+        </article>
+      </div>
+      <div class="arrow-line">记录数据 → 判断节奏 → 给出建议 → 用明细和图表解释</div>
+    </section>
+
+    <section id="preview">
+      <div class="section-head">
+        <div><h2>新版 UI 风格预览</h2><p>以下为基于实际实现制作的 HTML 界面稿。点击主题可查看 5 套主题下的整体气质，支出和收入语义色始终保持不变。</p></div>
+        <div class="theme-switcher" aria-label="主题切换">
+          <button class="theme-button active" data-primary="#0f6e56" data-soft="#d9eee7"><i class="swatch" style="--swatch:#0f6e56"></i>青松</button>
+          <button class="theme-button" data-primary="#d97706" data-soft="#f8e7ce"><i class="swatch" style="--swatch:#d97706"></i>暖阳</button>
+          <button class="theme-button" data-primary="#6b8299" data-soft="#e1e8ee"><i class="swatch" style="--swatch:#6b8299"></i>雾兰</button>
+          <button class="theme-button" data-primary="#c0446e" data-soft="#f5dfe6"><i class="swatch" style="--swatch:#c0446e"></i>樱粉</button>
+          <button class="theme-button" data-primary="#168f72" data-soft="#d4eee7"><i class="swatch" style="--swatch:#2dd4a7"></i>暗夜强调色</button>
+        </div>
+      </div>
+
+      <div class="phone-grid">
+        <article class="phone-wrap">
+          <h3>首页 · 今日财务气象</h3>
+          <p>第一屏直接回答：今天花得怎么样、每天还能花多少、本月总体是否安全。</p>
+          <div class="phone">
+            <div class="status"><span>09:41</span><span>5G · 82%</span></div>
+            <div class="app-head"><div><h4>早上好</h4><p>7月22日 星期三</p></div><div class="avatar">账</div></div>
+            <div class="app-card pulse">
+              <div class="pulse-top"><div class="pulse-icon">晴</div><div><div class="tiny">今日财务气象</div><strong>财务气象晴朗</strong></div></div>
+              <div class="pulse-copy">消费节奏慢于时间进度，今天可以安心安排。</div>
+              <div class="two-metric"><div><div class="data-label">今日已花</div><div class="data-value">¥28.60</div></div><div><div class="data-label">安心可花 / 天</div><div class="data-value">¥176.40</div></div></div>
+              <div class="progress" style="--value:44%"><i></i></div>
+              <div class="budget-meta"><span>预算进度 44%</span><span>时间进度 71%</span></div>
+            </div>
+            <div class="app-card three-metric">
+              <div><div class="data-label">本月支出</div><div class="data-value" style="color:var(--expense)">¥1,986</div></div>
+              <div><div class="data-label">本月收入</div><div class="data-value" style="color:var(--income)">¥8,600</div></div>
+              <div><div class="data-label">结余</div><div class="data-value">¥6,614</div></div>
+            </div>
+            <div class="quick"><div>预算</div><div>日历</div><div>洞察</div></div>
+            <div class="mini-title"><strong>本月发现</strong><span>看洞察</span></div>
+            <div class="insight-row"><div class="insight"><div class="tiny">花得最多</div><b>餐饮</b><div class="tiny">¥886.20</div></div><div class="insight"><div class="tiny">记账节奏</div><b>18 天</b><div class="tiny">42 笔记录</div></div></div>
+            <div class="mini-title"><strong>最近记录</strong><span>全部</span></div>
+            <div class="app-card"><div class="record"><div class="cat">餐</div><div class="record-main"><b>午餐</b><small>餐饮</small></div><div class="money">¥28.60</div></div><div class="record"><div class="cat" style="color:var(--blue)">交</div><div class="record-main"><b>地铁</b><small>交通</small></div><div class="money">¥12.00</div></div></div>
+            <div class="fab">＋</div><div class="nav"><span class="active">首页</span><span>明细</span><span>洞察</span><span>我的</span></div>
+          </div>
+        </article>
+
+        <article class="phone-wrap">
+          <h3>预算 · 从“圆环”到行动建议</h3>
+          <p>重点突出预算剩余、安心可花和预计月末，分类预算用于约束高风险类别。</p>
+          <div class="phone">
+            <div class="status"><span>09:41</span><span>5G · 82%</span></div>
+            <div class="page-title"><span class="back">‹</span><b>预算计划</b></div>
+            <div class="month-switch"><span>‹</span><span>2026年7月</span><span>›</span></div>
+            <div style="height:12px"></div>
+            <div class="app-card budget-hero">
+              <div class="tiny">预算还剩</div><div class="big">¥2,514.00</div>
+              <div class="progress" style="--value:44%"><i style="background:var(--expense)"></i></div>
+              <div class="budget-meta"><span>已用 ¥1,986.00</span><span>预算 ¥4,500.00</span></div>
+              <div class="three-metric" style="margin-top:16px"><div><div class="data-label">安心可花 / 天</div><div class="data-value">¥176.40</div></div><div><div class="data-label">预计月末</div><div class="data-value">¥2,797</div></div><div><div class="data-label">预算进度</div><div class="data-value">44%</div></div></div>
+            </div>
+            <div class="mini-title"><div><strong>分类预算</strong><div class="tiny">给容易失控的类别单独设边界</div></div><span>总预算</span></div>
+            <div class="app-card">
+              <div class="category-budget"><div class="cat">餐</div><div><div class="line"><b>餐饮</b><small>¥886 / ¥1,200</small></div><div class="bar" style="--bar:var(--amber);--value:74%"><i></i></div></div></div>
+              <div class="category-budget"><div class="cat" style="color:var(--blue)">交</div><div><div class="line"><b>交通</b><small>¥212 / ¥500</small></div><div class="bar" style="--bar:var(--blue);--value:42%"><i></i></div></div></div>
+              <div class="category-budget"><div class="cat" style="color:var(--expense)">购</div><div><div class="line"><b>购物</b><small>¥536 / ¥600</small></div><div class="bar" style="--bar:var(--expense);--value:89%"><i></i></div></div></div>
+              <div class="category-budget"><div class="cat" style="color:var(--purple)">娱</div><div><div class="line"><b>娱乐</b><small>未设置预算</small></div><div class="bar" style="--bar:var(--purple);--value:0%"><i></i></div></div></div>
+            </div>
+          </div>
+        </article>
+
+        <article class="phone-wrap">
+          <h3>洞察 · 先讲结论，再给证据</h3>
+          <p>从图表堆叠改成可阅读的分析顺序：一句话、关键指标、分类结构、每日趋势。</p>
+          <div class="phone">
+            <div class="status"><span>09:41</span><span>5G · 82%</span></div>
+            <div class="app-head"><h4>消费洞察</h4></div>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><div class="month-switch"><span>‹</span><span>7月</span><span>›</span></div><div class="segment"><span class="active">支出</span><span>收入</span></div></div>
+            <div class="app-card narrative"><div class="pulse-icon" style="color:var(--expense)">析</div><div><b>本月一句话</b><p>餐饮占了 42%，是本月最主要的花费方向；18日是峰值日。</p></div></div>
+            <div class="three-metric" style="margin:10px 0"><div class="insight"><div class="tiny">总支出</div><b>¥2,486</b></div><div class="insight"><div class="tiny">有记录日均</div><b>¥138</b></div><div class="insight"><div class="tiny">峰值日</div><b>18日</b></div></div>
+            <div class="mini-title"><div><strong>分类结构</strong><div class="tiny">看见钱主要流向哪里</div></div></div>
+            <div class="app-card">
+              <div class="donut-wrap"><div class="donut"></div></div>
+              <div class="rank"><b>1</b><span>餐饮</span><div class="rbar" style="--bar:var(--amber);--value:100%"><i></i></div><b>¥1,044</b></div>
+              <div class="rank"><b>2</b><span>交通</span><div class="rbar" style="--bar:var(--blue);--value:55%"><i></i></div><b>¥572</b></div>
+              <div class="rank"><b>3</b><span>购物</span><div class="rbar" style="--bar:var(--expense);--value:41%"><i></i></div><b>¥426</b></div>
+            </div>
+            <div class="mini-title"><div><strong>每日趋势</strong><div class="tiny">识别高峰日和消费节奏</div></div></div>
+            <div class="app-card"><div class="chart"><i style="--value:22%"></i><i style="--value:36%"></i><i style="--value:18%"></i><i style="--value:55%"></i><i style="--value:28%"></i><i style="--value:76%"></i><i style="--value:38%"></i><i style="--value:94%"></i><i style="--value:46%"></i><i style="--value:63%"></i></div></div>
+            <div class="fab">＋</div><div class="nav"><span>首页</span><span>明细</span><span class="active">洞察</span><span>我的</span></div>
+          </div>
+        </article>
+
+        <article class="phone-wrap">
+          <h3>日历 · 消费热力图</h3>
+          <p>不再只显示日期和金额，通过深浅迅速识别高支出日，并可下钻查看当天流水。</p>
+          <div class="phone">
+            <div class="status"><span>09:41</span><span>5G · 82%</span></div>
+            <div class="page-title"><span class="back">‹</span><b>消费日历</b></div>
+            <div class="month-switch"><span>‹</span><span>2026年7月</span><span>›</span></div>
+            <div style="height:12px"></div>
+            <div class="app-card three-metric" style="background:var(--primary-soft)"><div><div class="data-label">本月支出</div><div class="data-value">¥2,486</div></div><div><div class="data-label">消费日</div><div class="data-value">18 天</div></div><div><div class="data-label">消费日均</div><div class="data-value">¥138</div></div></div>
+            <div style="height:10px"></div>
+            <div class="app-card">
+              <div class="calendar">
+                <span class="weekday">日</span><span class="weekday">一</span><span class="weekday">二</span><span class="weekday">三</span><span class="weekday">四</span><span class="weekday">五</span><span class="weekday">六</span>
+                <span class="day"></span><span class="day"></span><span class="day"><b>1</b><small>28.60</small></span><span class="day h1"><b>2</b><small>12.00</small></span><span class="day"><b>3</b></span><span class="day h2"><b>4</b><small>86.20</small></span><span class="day h1"><b>5</b><small>35.00</small></span>
+                <span class="day"><b>6</b></span><span class="day h3"><b>7</b><small>168.00</small></span><span class="day h1"><b>8</b><small>26.80</small></span><span class="day"><b>9</b></span><span class="day h2"><b>10</b><small>92.40</small></span><span class="day h1"><b>11</b><small>48.00</small></span><span class="day"><b>12</b></span>
+                <span class="day h1"><b>13</b><small>32.00</small></span><span class="day h2"><b>14</b><small>78.50</small></span><span class="day"><b>15</b></span><span class="day h1"><b>16</b><small>45.00</small></span><span class="day h4"><b>17</b><small>356.00</small></span><span class="day h3"><b>18</b><small>218.00</small></span><span class="day"><b>19</b></span>
+                <span class="day h1"><b>20</b><small>22.00</small></span><span class="day h2"><b>21</b><small>96.00</small></span><span class="day today"><b>22</b><small>28.60</small></span><span class="day"><b>23</b></span><span class="day"><b>24</b></span><span class="day"><b>25</b></span><span class="day"><b>26</b></span>
+                <span class="day"><b>27</b></span><span class="day"><b>28</b></span><span class="day"><b>29</b></span><span class="day"><b>30</b></span><span class="day"><b>31</b></span>
+              </div>
+            </div>
+            <div style="text-align:center;margin-top:10px" class="tiny">颜色越深，表示当天支出越高</div>
+          </div>
+        </article>
+
+        <article class="phone-wrap">
+          <h3>记账 · 核心输入体验</h3>
+          <p>金额成为视觉焦点，分类、日期、备注与数字键盘保持紧凑、稳定和单手可操作。</p>
+          <div class="phone editor-phone" style="background:#dce3e0">
+            <div class="sheet">
+              <div class="handle"></div>
+              <div class="sheet-head"><span>×</span><b>记一笔</b><span>···</span></div>
+              <div class="segment" style="width:100%;margin-top:10px"><span class="active">支出</span><span>收入</span></div>
+              <div class="amount">¥ 128.50</div>
+              <div class="month-switch">日期&nbsp;&nbsp;今天 09:41</div>
+              <div class="mini-title"><strong>分类</strong></div>
+              <div class="category-grid">
+                <div class="category-item active"><b>餐</b>餐饮</div><div class="category-item"><b>交</b>交通</div><div class="category-item"><b>购</b>购物</div><div class="category-item"><b>娱</b>娱乐</div>
+                <div class="category-item"><b>医</b>医疗</div><div class="category-item"><b>居</b>居家</div><div class="category-item"><b>学</b>学习</div><div class="category-item"><b>他</b>其他</div>
+              </div>
+              <div class="note-field">添加备注</div>
+              <div class="keypad">
+                <div class="key">1</div><div class="key">2</div><div class="key">3</div><div class="key">⌫</div>
+                <div class="key">4</div><div class="key">5</div><div class="key">6</div><div class="key done">完成</div>
+                <div class="key">7</div><div class="key">8</div><div class="key">9</div>
+                <div class="key">0</div><div class="key">.</div><div class="key">00</div><div class="key" style="font-size:10px">今天</div>
+              </div>
+            </div>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section id="changes">
+      <div class="section-head"><div><h2>页面级改动</h2><p>所有主要用户路径均重新梳理，而不是只改首页。</p></div></div>
+      <table class="change-table">
+        <thead><tr><th>模块</th><th>原问题</th><th>本次优化</th></tr></thead>
+        <tbody>
+          <tr><td>主导航</td><td>明细、预算、报表并列，缺乏真正首页</td><td>调整为“首页 / 明细 / 洞察 / 我的”，预算作为首页关键能力下钻</td></tr>
+          <tr><td>首页</td><td>打开后直接看流水，缺少每天回访理由</td><td>新增今日财务气象、安心可花、预算与时间进度、本月发现和最近记录</td></tr>
+          <tr><td>预算</td><td>环形图展示结果，但行动建议不突出</td><td>围绕剩余预算、每日建议、预计月末、分类边界重新组织</td></tr>
+          <tr><td>洞察</td><td>饼图和折线图直接堆叠，需要用户自己解释</td><td>先给一句话结论，再展示总额、日均、峰值、分类排名和趋势证据</td></tr>
+          <tr><td>日历</td><td>每日数字密集，难以快速定位异常日</td><td>升级为消费热力图，新增月度摘要、当日收支汇总及直接编辑</td></tr>
+          <tr><td>明细</td><td>月份和流水混在同一层，筛选能力弱</td><td>增加月份切换与全部/支出/收入筛选，保持按日分组账本结构</td></tr>
+          <tr><td>记账</td><td>表单感较强，数字键盘存在嵌套 Expanded 运行时风险</td><td>强化金额主视觉、统一分类选择与键盘，并修复 ParentData 冲突</td></tr>
+          <tr><td>我的</td><td>普通设置列表，缺少个人账本感</td><td>新增财务档案头部、连续记账信息、主题色板、数据与安全分区</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section id="system">
+      <div class="section-head"><div><h2>设计系统</h2><p>目标是安静、可信、可扫描，避免营销页式大渐变和过度装饰。</p></div></div>
+      <div class="system-grid">
+        <article class="system-card"><h3>颜色</h3><div class="palette"><div class="color-chip" style="--chip:#0f6e56"></div><div class="color-chip" style="--chip:#d85a30"></div><div class="color-chip" style="--chip:#3b6d11"></div><div class="color-chip" style="--chip:#185fa5"></div><div class="color-chip" style="--chip:#7f77dd"></div></div><div class="token-line"><span>主题色</span><code>ColorScheme.primary</code></div><div class="token-line"><span>支出色</span><code>#D85A30</code></div><div class="token-line"><span>收入色</span><code>#3B6D11</code></div></article>
+        <article class="system-card"><h3>组件几何</h3><div class="token-line"><span>页面边距</span><code>16px</code></div><div class="token-line"><span>常用间距</span><code>4 / 8 / 12 / 16 / 24</code></div><div class="token-line"><span>卡片圆角</span><code>18px</code></div><div class="token-line"><span>按钮圆角</span><code>12–14px</code></div><div class="token-line"><span>主信息卡</span><code>20–22px</code></div></article>
+        <article class="system-card"><h3>层级原则</h3><div class="token-line"><span>第一层</span><code>今日状态 / 金额</code></div><div class="token-line"><span>第二层</span><code>可执行建议</code></div><div class="token-line"><span>第三层</span><code>图表与明细证据</code></div><div class="token-line"><span>装饰</span><code>少阴影 + 浅表面</code></div></article>
+      </div>
+    </section>
+
+    <section>
+      <div class="section-head"><div><h2>“财务气象”计算链路</h2><p>功能完全基于本地整数金额计算，不读取备注内容，不依赖外部服务。</p></div></div>
+      <div class="flow">
+        <div class="flow-node"><b>本月流水</b><small>汇总支出、收入、今日支出和分类结构</small></div>
+        <div class="flow-node"><b>预算与时间</b><small>计算预算进度、月份进度和剩余天数</small></div>
+        <div class="flow-node"><b>SpendingPulse</b><small>使用 int cents 判断晴朗、平稳、提醒、超支</small></div>
+        <div class="flow-node"><b>可执行输出</b><small>安心可花 / 天、预计月末和自然语言说明</small></div>
+      </div>
+    </section>
+
+    <section id="files">
+      <div class="section-head"><div><h2>关键文件清单</h2><p>本次提交共涉及 29 个文件，以下按职责整理。</p></div></div>
+      <div class="file-groups">
+        <article class="file-group"><h3>新增产品能力</h3><ul><li><code>lib/core/spending_pulse.dart</code> — 财务气象纯整数计算</li><li><code>lib/presentation/overview/overview_page.dart</code> — 新首页</li><li><code>test/core/spending_pulse_test.dart</code> — 状态边界测试</li></ul></article>
+        <article class="file-group"><h3>共享设计组件</h3><ul><li><code>lib/shared/widgets/month_switcher.dart</code></li><li><code>lib/shared/widgets/section_header.dart</code></li><li><code>lib/shared/widgets/type_segmented_control.dart</code></li><li><code>lib/core/theme/app_theme.dart</code></li></ul></article>
+        <article class="file-group"><h3>主要页面重构</h3><ul><li><code>presentation/home/home_page.dart</code></li><li><code>presentation/budget/budget_page.dart</code></li><li><code>presentation/report/report_page.dart</code></li><li><code>presentation/calendar/calendar_page.dart</code></li><li><code>presentation/detail/detail_page.dart</code></li><li><code>presentation/settings/settings_page.dart</code></li></ul></article>
+        <article class="file-group"><h3>录入与细节体验</h3><ul><li><code>presentation/editor/editor_sheet.dart</code></li><li><code>presentation/editor/widgets/category_grid.dart</code></li><li><code>presentation/editor/widgets/number_pad.dart</code></li><li><code>calendar/widgets/day_detail_sheet.dart</code></li><li><code>detail/widgets/record_list_tile.dart</code></li></ul></article>
+        <article class="file-group"><h3>删除的旧组件</h3><ul><li><code>budget/widgets/budget_ring.dart</code></li><li><code>budget/widgets/overspend_alert.dart</code></li><li>相关能力已整合进新的预算面板和首页财务气象</li></ul></article>
+        <article class="file-group"><h3>回归保护</h3><ul><li><code>test/ui/layout_smoke_test.dart</code> — 360×800 小屏验证</li><li><code>test/widget_test.dart</code> — 新导航验证</li><li><code>editor_provider.dart</code> — 补全统计、日历等 Provider 刷新</li></ul></article>
+      </div>
+    </section>
+
+    <section id="verify">
+      <div class="section-head"><div><h2>质量验证</h2><p>除了静态检查和单元测试，还真实捕获并修复了小屏横向溢出与数字键盘 ParentData 冲突。</p></div></div>
+      <div class="checks">
+        <div class="check"><b>通过</b><span>flutter analyze · No issues found</span></div>
+        <div class="check"><b>65 / 65</b><span>完整自动化测试</span></div>
+        <div class="check"><b>6 / 6</b><span>360×800 页面布局测试</span></div>
+        <div class="check"><b>成功</b><span>Android debug APK 构建</span></div>
+      </div>
+      <div class="note">视觉验收使用 Flutter 原生 widget 渲染；项目按 Android 单平台配置，未为了截图引入 Web 数据库兼容层。最终 APK 位于 <code>build/app/outputs/flutter-apk/app-debug.apk</code>。</div>
+    </section>
+
+    <footer>记一笔 · 全量产品与 UI 优化说明 · 生成于 2026-07-22</footer>
+  </main>
+
+  <script>
+    const root = document.documentElement;
+    const buttons = document.querySelectorAll('.theme-button');
+    buttons.forEach(button => {
+      button.addEventListener('click', () => {
+        buttons.forEach(item => item.classList.remove('active'));
+        button.classList.add('active');
+        root.style.setProperty('--primary', button.dataset.primary);
+        root.style.setProperty('--primary-soft', button.dataset.soft);
+      });
+    });
+  </script>
+</body>
+</html>
