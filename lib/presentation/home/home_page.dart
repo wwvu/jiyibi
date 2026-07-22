@@ -21,23 +21,23 @@ class _HomePageState extends ConsumerState<HomePage> {
   static const _tabs = <_HomeTab>[
     _HomeTab(
       label: '首页',
-      icon: Icons.space_dashboard_outlined,
-      selectedIcon: Icons.space_dashboard_rounded,
+      icon: Icons.home_outlined,
+      selectedIcon: Icons.home_rounded,
     ),
     _HomeTab(
       label: '明细',
-      icon: Icons.receipt_long_outlined,
-      selectedIcon: Icons.receipt_long,
+      icon: Icons.list_alt_outlined,
+      selectedIcon: Icons.list_alt_rounded,
     ),
     _HomeTab(
       label: '洞察',
-      icon: Icons.auto_graph_outlined,
-      selectedIcon: Icons.auto_graph_rounded,
+      icon: Icons.insights_outlined,
+      selectedIcon: Icons.insights_rounded,
     ),
     _HomeTab(
       label: '我的',
-      icon: Icons.person_outline,
-      selectedIcon: Icons.person,
+      icon: Icons.person_outline_rounded,
+      selectedIcon: Icons.person_rounded,
     ),
   ];
 

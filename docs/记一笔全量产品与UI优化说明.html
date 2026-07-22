@@ -261,8 +261,10 @@
       background: var(--surface);
       border-top: 1px solid var(--line);
     }
-    .nav span { text-align: center; color: var(--muted); font-size: 9px; }
-    .nav span::before { content: ""; display: block; width: 18px; height: 14px; margin: 0 auto 4px; border: 2px solid currentColor; border-radius: 5px; }
+    .nav span { display: flex; flex-direction: column; align-items: center; text-align: center; color: var(--muted); font-size: 9px; }
+    .nav-icon { display: grid; place-items: center; width: 38px; height: 28px; margin: 0 auto 2px; border-radius: 10px; }
+    .nav-icon svg { width: 19px; height: 19px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+    .nav .active .nav-icon { background: var(--primary-soft); }
     .nav .active { color: var(--primary); font-weight: 800; }
     .fab {
       position: absolute;
@@ -515,7 +517,12 @@
             <div class="insight-row"><div class="insight"><div class="tiny">花得最多</div><b>餐饮</b><div class="tiny">¥886.20</div></div><div class="insight"><div class="tiny">记账节奏</div><b>18 天</b><div class="tiny">42 笔记录</div></div></div>
             <div class="mini-title"><strong>最近记录</strong><span>全部</span></div>
             <div class="app-card"><div class="record"><div class="cat">餐</div><div class="record-main"><b>午餐</b><small>餐饮</small></div><div class="money">¥28.60</div></div><div class="record"><div class="cat" style="color:var(--blue)">交</div><div class="record-main"><b>地铁</b><small>交通</small></div><div class="money">¥12.00</div></div></div>
-            <div class="fab">＋</div><div class="nav"><span class="active">首页</span><span>明细</span><span>洞察</span><span>我的</span></div>
+            <div class="fab">＋</div><div class="nav">
+              <span class="active"><i class="nav-icon"><svg viewBox="0 0 24 24"><path d="M3 10.8 12 3l9 7.8v9.1a1.1 1.1 0 0 1-1.1 1.1H4.1A1.1 1.1 0 0 1 3 19.9Z"/><path d="M9 21v-7h6v7"/></svg></i>首页</span>
+              <span><i class="nav-icon"><svg viewBox="0 0 24 24"><path d="M9 6h12M9 12h12M9 18h12"/><path d="M4 6h.01M4 12h.01M4 18h.01"/></svg></i>明细</span>
+              <span><i class="nav-icon"><svg viewBox="0 0 24 24"><path d="M4 19V5"/><path d="m7 16 4-5 4 3 5-7"/><path d="M4 19h16"/></svg></i>洞察</span>
+              <span><i class="nav-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4.5 21a7.5 7.5 0 0 1 15 0"/></svg></i>我的</span>
+            </div>
           </div>
         </article>
 
@@ -561,7 +568,12 @@
             </div>
             <div class="mini-title"><div><strong>每日趋势</strong><div class="tiny">识别高峰日和消费节奏</div></div></div>
             <div class="app-card"><div class="chart"><i style="--value:22%"></i><i style="--value:36%"></i><i style="--value:18%"></i><i style="--value:55%"></i><i style="--value:28%"></i><i style="--value:76%"></i><i style="--value:38%"></i><i style="--value:94%"></i><i style="--value:46%"></i><i style="--value:63%"></i></div></div>
-            <div class="fab">＋</div><div class="nav"><span>首页</span><span>明细</span><span class="active">洞察</span><span>我的</span></div>
+            <div class="fab">＋</div><div class="nav">
+              <span><i class="nav-icon"><svg viewBox="0 0 24 24"><path d="M3 10.8 12 3l9 7.8v9.1a1.1 1.1 0 0 1-1.1 1.1H4.1A1.1 1.1 0 0 1 3 19.9Z"/><path d="M9 21v-7h6v7"/></svg></i>首页</span>
+              <span><i class="nav-icon"><svg viewBox="0 0 24 24"><path d="M9 6h12M9 12h12M9 18h12"/><path d="M4 6h.01M4 12h.01M4 18h.01"/></svg></i>明细</span>
+              <span class="active"><i class="nav-icon"><svg viewBox="0 0 24 24"><path d="M4 19V5"/><path d="m7 16 4-5 4 3 5-7"/><path d="M4 19h16"/></svg></i>洞察</span>
+              <span><i class="nav-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4.5 21a7.5 7.5 0 0 1 15 0"/></svg></i>我的</span>
+            </div>
           </div>
         </article>
 

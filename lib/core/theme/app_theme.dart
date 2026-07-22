@@ -100,16 +100,19 @@ class AppTheme {
       ),
       navigationBarTheme: NavigationBarThemeData(
         backgroundColor: colorScheme.surface,
-        indicatorColor: colorScheme.primaryContainer,
+        indicatorColor: colorScheme.primaryContainer.withValues(alpha: 0.72),
+        indicatorShape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
         surfaceTintColor: Colors.transparent,
-        height: 72,
+        height: 68,
         labelTextStyle: WidgetStateProperty.resolveWith((states) {
           final selected = states.contains(WidgetState.selected);
           return TextStyle(
             color: selected
                 ? colorScheme.primary
                 : colorScheme.onSurfaceVariant,
-            fontSize: 12,
+            fontSize: 11,
             fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
           );
         }),
@@ -119,7 +122,7 @@ class AppTheme {
             color: selected
                 ? colorScheme.primary
                 : colorScheme.onSurfaceVariant,
-            size: 24,
+            size: selected ? 23 : 22,
           );
         }),
       ),
