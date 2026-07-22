@@ -10,12 +10,20 @@ import 'package:jiyibi/presentation/calendar/calendar_page.dart';
 import 'package:jiyibi/presentation/detail/widgets/month_summary_card.dart';
 import 'package:jiyibi/presentation/detail/widgets/record_list_tile.dart';
 import 'package:jiyibi/presentation/editor/editor_sheet.dart';
+import 'package:jiyibi/shared/widgets/month_switcher.dart';
 
-class DetailPage extends ConsumerWidget {
+class DetailPage extends ConsumerStatefulWidget {
   const DetailPage({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<DetailPage> createState() => _DetailPageState();
+}
+
+class _DetailPageState extends ConsumerState<DetailPage> {
+  String _filter = 'all';
+
+  @override
+  Widget build(BuildContext context) {
     final month = ref.watch(currentMonthProvider);
     final recordsAsync = ref.watch(monthRecordsProvider);
     final summaryAsync = ref.watch(monthSummaryProvider);
@@ -23,8 +31,10 @@ class DetailPage extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: _MonthSelector(month: month),
-        centerTitle: true,
+        title: const Align(
+          alignment: Alignment.centerLeft,
+          child: Text('收支明细'),
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.calendar_month_outlined),
@@ -40,9 +50,26 @@ class DetailPage extends ConsumerWidget {
       body: Column(
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(12, 8, 12, 4),
+            padding: const EdgeInsets.fromLTRB(16, 4, 16, 6),
+            child: Row(
+              children: [
+                MonthSwitcher(
+                  month: month,
+                  onPrevious: () => _changeMonth(month, -1),
+                  onNext: () => _changeMonth(month, 1),
+                ),
+                const Spacer(),
+                _FilterButton(
+                  value: _filter,
+                  onChanged: (value) => setState(() => _filter = value),
+                ),
+              ],
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
             child: summaryAsync.when(
-              loading: () => const SizedBox(height: 88),
+              loading: () => const SizedBox(height: 132),
               error: (error, _) => _ErrorBanner(message: '$error'),
               data: (summary) => MonthSummaryCard(
                 expenseCents: summary.expenseCents,
@@ -58,14 +85,19 @@ class DetailPage extends ConsumerWidget {
                 loading: () => const Center(child: CircularProgressIndicator()),
                 error: (error, _) => _ErrorBanner(message: '$error'),
                 data: (categories) {
-                  if (records.isEmpty) {
+                  final filteredRecords = _filter == 'all'
+                      ? records
+                      : records
+                            .where((record) => record.type == _filter)
+                            .toList();
+                  if (filteredRecords.isEmpty) {
                     return const _EmptyState();
                   }
                   final categoryMap = <int, Category>{
                     for (final category in categories) category.id: category,
                   };
                   return _RecordList(
-                    records: records,
+                    records: filteredRecords,
                     categoryMap: categoryMap,
                     onDelete: (record) => _deleteRecord(ref, record),
                   );
@@ -83,37 +115,45 @@ class DetailPage extends ConsumerWidget {
     ref.invalidate(monthRecordsProvider);
     ref.invalidate(monthSummaryProvider);
     ref.invalidate(monthByCategoryProvider);
+    ref.invalidate(monthByDayProvider);
+    ref.invalidate(monthExpenseByCategoryProvider);
+    ref.invalidate(recordStatsProvider);
+  }
+
+  void _changeMonth(DateTime month, int delta) {
+    ref
+        .read(currentMonthProvider.notifier)
+        .setMonth(DateTime(month.year, month.month + delta));
   }
 }
 
-class _MonthSelector extends ConsumerWidget {
-  const _MonthSelector({required this.month});
+class _FilterButton extends StatelessWidget {
+  const _FilterButton({required this.value, required this.onChanged});
 
-  final DateTime month;
+  final String value;
+  final ValueChanged<String> onChanged;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        IconButton(
-          icon: const Icon(Icons.chevron_left),
-          onPressed: () {
-            final previous = DateTime(month.year, month.month - 1, 1);
-            ref.read(currentMonthProvider.notifier).setMonth(previous);
-          },
-        ),
-        Text(
-          DateFormat('yyyy年M月').format(month),
-          style: Theme.of(context).textTheme.titleMedium,
-        ),
-        IconButton(
-          icon: const Icon(Icons.chevron_right),
-          onPressed: () {
-            final next = DateTime(month.year, month.month + 1, 1);
-            ref.read(currentMonthProvider.notifier).setMonth(next);
-          },
-        ),
+  Widget build(BuildContext context) {
+    final labels = {'all': '全部', 'expense': '支出', 'income': '收入'};
+    return MenuAnchor(
+      builder: (context, controller, child) {
+        return OutlinedButton.icon(
+          onPressed: () =>
+              controller.isOpen ? controller.close() : controller.open(),
+          icon: const Icon(Icons.filter_list_rounded, size: 18),
+          label: Text(labels[value]!),
+        );
+      },
+      menuChildren: [
+        for (final entry in labels.entries)
+          MenuItemButton(
+            onPressed: () => onChanged(entry.key),
+            leadingIcon: value == entry.key
+                ? const Icon(Icons.check_rounded)
+                : const SizedBox(width: 24),
+            child: Text(entry.value),
+          ),
       ],
     );
   }
@@ -135,7 +175,7 @@ class _RecordList extends StatelessWidget {
     final grouped = _groupByDay(records);
 
     return ListView.builder(
-      padding: const EdgeInsets.only(bottom: 96),
+      padding: const EdgeInsets.fromLTRB(16, 2, 16, 112),
       itemCount: grouped.length,
       itemBuilder: (context, index) {
         final entry = grouped[index];
@@ -208,18 +248,20 @@ class _DayGroup extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final finance = theme.extension<FinanceColors>();
-    final expenseColor = finance?.expense ?? const Color(0xFFD85A30);
+    final expenseColor = finance?.expense ?? theme.colorScheme.error;
 
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+          padding: const EdgeInsets.fromLTRB(2, 12, 2, 8),
           child: Row(
             children: [
               Text(
                 DateFormat('M月d日 EEE', 'zh_CN').format(date),
                 style: theme.textTheme.labelLarge?.copyWith(
                   color: theme.colorScheme.onSurfaceVariant,
+                  fontWeight: FontWeight.w700,
                 ),
               ),
               const Spacer(),
@@ -227,32 +269,54 @@ class _DayGroup extends StatelessWidget {
                 MoneyUtils.formatYuan(dayExpenseCents),
                 style: theme.textTheme.labelLarge?.copyWith(
                   color: expenseColor,
+                  fontWeight: FontWeight.w700,
                 ),
               ),
             ],
           ),
         ),
-        for (final record in records)
-          Dismissible(
-            key: ValueKey(record.id),
-            direction: DismissDirection.endToStart,
-            background: Container(
-              color: theme.colorScheme.error,
-              alignment: Alignment.centerRight,
-              padding: const EdgeInsets.only(right: 24),
-              child: Icon(Icons.delete, color: theme.colorScheme.onError),
-            ),
-            confirmDismiss: (direction) => _confirmDelete(context, record),
-            onDismissed: (direction) => onDelete(record),
-            child: RecordListTile(
-              record: record,
-              category: record.categoryId == null
-                  ? null
-                  : categoryMap[record.categoryId],
-              onTap: () => showEditorSheetForEdit(context, record),
+        Card(
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(18),
+            child: Column(
+              children: [
+                for (var i = 0; i < records.length; i++) ...[
+                  Dismissible(
+                    key: ValueKey(records[i].id),
+                    direction: DismissDirection.endToStart,
+                    background: Container(
+                      color: theme.colorScheme.error,
+                      alignment: Alignment.centerRight,
+                      padding: const EdgeInsets.only(right: 24),
+                      child: Icon(
+                        Icons.delete,
+                        color: theme.colorScheme.onError,
+                      ),
+                    ),
+                    confirmDismiss: (direction) =>
+                        _confirmDelete(context, records[i]),
+                    onDismissed: (direction) => onDelete(records[i]),
+                    child: RecordListTile(
+                      record: records[i],
+                      category: records[i].categoryId == null
+                          ? null
+                          : categoryMap[records[i].categoryId],
+                      onTap: () => showEditorSheetForEdit(context, records[i]),
+                    ),
+                  ),
+                  if (i != records.length - 1)
+                    Divider(
+                      height: 1,
+                      indent: 72,
+                      color: theme.colorScheme.outlineVariant.withValues(
+                        alpha: 0.62,
+                      ),
+                    ),
+                ],
+              ],
             ),
           ),
-        const Divider(height: 1),
+        ),
       ],
     );
   }

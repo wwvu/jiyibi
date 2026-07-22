@@ -9,16 +9,18 @@ class DailyTrendChart extends StatelessWidget {
     super.key,
     required this.byDay,
     required this.daysInMonth,
+    this.color,
   });
 
   final List<({int day, int amountCents})> byDay;
   final int daysInMonth;
+  final Color? color;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    final lineColor = const Color(0xFFD85A30);
+    final lineColor = color ?? colorScheme.primary;
 
     if (byDay.isEmpty) {
       return SizedBox(

@@ -19,62 +19,40 @@ class SettingsPage extends ConsumerWidget {
     final accountsAsync = ref.watch(allAccountsProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('我的'), centerTitle: true),
+      appBar: AppBar(
+        title: const Align(
+          alignment: Alignment.centerLeft,
+          child: Text('我的财务'),
+        ),
+      ),
       body: ListView(
+        padding: const EdgeInsets.fromLTRB(16, 4, 16, 116),
         children: [
-          // 记账统计
-          SettingsSection(
-            title: '记账统计',
-            children: [
-              statsAsync.when(
-                loading: () => const SettingsTile(
-                  icon: Icons.analytics_outlined,
-                  title: '加载中…',
-                ),
-                error: (error, _) => SettingsTile(
-                  icon: Icons.error_outline,
-                  title: '加载失败',
-                  subtitle: '$error',
-                ),
-                data: (stats) => Column(
-                  children: [
-                    SettingsTile(
-                      icon: Icons.receipt_long_outlined,
-                      title: '总记录数',
-                      subtitle: '${stats.totalRecords} 条',
-                    ),
-                    SettingsTile(
-                      icon: Icons.calendar_today_outlined,
-                      title: '记账天数',
-                      subtitle: '${stats.distinctDays} 天',
-                    ),
-                    SettingsTile(
-                      icon: Icons.local_fire_department_outlined,
-                      title: '连续记账',
-                      subtitle: '${stats.currentStreak} 天',
-                    ),
-                  ],
-                ),
-              ),
-            ],
+          statsAsync.when(
+            loading: () => const SizedBox(height: 154),
+            error: (error, _) => SettingsTile(
+              icon: Icons.error_outline,
+              title: '统计加载失败',
+              subtitle: '$error',
+            ),
+            data: (stats) => _FinanceProfile(
+              totalRecords: stats.totalRecords,
+              distinctDays: stats.distinctDays,
+              currentStreak: stats.currentStreak,
+            ),
           ),
-
-          // 主题
+          const SizedBox(height: 12),
           SettingsSection(
             title: '外观',
             children: [
-              SettingsTile(
-                icon: Icons.palette_outlined,
-                title: '主题外观',
-                subtitle: themeKey.label,
+              _ThemePreview(
+                current: themeKey,
                 onTap: () => _showThemePicker(context, ref, themeKey),
               ),
             ],
           ),
-
-          // 数据管理
           SettingsSection(
-            title: '数据管理',
+            title: '分类与账户',
             children: [
               SettingsTile(
                 icon: Icons.category_outlined,
@@ -85,7 +63,7 @@ class SettingsPage extends ConsumerWidget {
                           '${cats.where((c) => !c.archived).length} 个分类',
                     ) ??
                     '加载中…',
-                onTap: () => _showComingSoon(context, '分类管理即将在 V1 迭代上线'),
+                onTap: () => _showComingSoon(context, '分类管理将在下一版本开放'),
               ),
               SettingsTile(
                 icon: Icons.account_balance_wallet_outlined,
@@ -96,14 +74,12 @@ class SettingsPage extends ConsumerWidget {
                           '${accounts.where((a) => !a.archived).length} 个账户',
                     ) ??
                     '加载中…',
-                onTap: () => _showComingSoon(context, '账户管理即将在 V1 迭代上线'),
+                onTap: () => _showComingSoon(context, '账户管理将在下一版本开放'),
               ),
             ],
           ),
-
-          // 导入导出
           SettingsSection(
-            title: '导入导出',
+            title: '数据',
             children: [
               SettingsTile(
                 icon: Icons.file_upload_outlined,
@@ -114,43 +90,39 @@ class SettingsPage extends ConsumerWidget {
               SettingsTile(
                 icon: Icons.file_download_outlined,
                 title: '导入数据',
-                subtitle: 'V1 迭代',
-                onTap: () => _showComingSoon(context, 'CSV 导入将在 V1 迭代上线'),
+                subtitle: '从其他记账 App 迁移',
+                onTap: () => _showComingSoon(context, '数据导入将在下一版本开放'),
               ),
             ],
           ),
-
-          // 隐私与安全（加固阶段占位）
           SettingsSection(
             title: '隐私与安全',
             children: [
               SettingsTile(
                 icon: Icons.lock_outline,
                 title: '应用锁',
-                subtitle: '加固阶段',
+                subtitle: '使用生物识别保护账本',
                 onTap: () => _showComingSoon(context, '应用锁将在上线前加固阶段上线'),
               ),
               SettingsTile(
                 icon: Icons.backup_outlined,
                 title: '数据备份',
-                subtitle: '加固阶段',
+                subtitle: '创建受保护的数据副本',
                 onTap: () => _showComingSoon(context, '数据备份将在上线前加固阶段上线'),
               ),
             ],
           ),
 
-          // 关于
           SettingsSection(
             title: '关于',
             children: [
               SettingsTile(
                 icon: Icons.info_outline,
                 title: '版本',
-                subtitle: 'v0.1.0-MVP',
+                subtitle: 'v0.2.0 · 财务气象版',
               ),
             ],
           ),
-          const SizedBox(height: 80),
         ],
       ),
     );
@@ -166,20 +138,43 @@ class SettingsPage extends ConsumerWidget {
       builder: (context) {
         return AlertDialog(
           title: const Text('选择主题'),
-          content: RadioGroup<AppThemeKey>(
-            groupValue: current,
-            onChanged: (value) {
-              if (value == null) return;
-              ref.read(themeControllerProvider.notifier).setTheme(value);
-              Navigator.of(context).pop();
-            },
+          content: SizedBox(
+            width: 320,
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 for (final key in AppThemeKey.values)
-                  RadioListTile<AppThemeKey>(
-                    value: key,
-                    title: Text(key.label),
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: Material(
+                      color: key == current
+                          ? key.previewColor.withValues(alpha: 0.12)
+                          : Theme.of(context).colorScheme.surfaceContainerLow,
+                      borderRadius: BorderRadius.circular(14),
+                      child: ListTile(
+                        onTap: () {
+                          ref
+                              .read(themeControllerProvider.notifier)
+                              .setTheme(key);
+                          Navigator.of(context).pop();
+                        },
+                        leading: Container(
+                          width: 30,
+                          height: 30,
+                          decoration: BoxDecoration(
+                            color: key.previewColor,
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                        title: Text(
+                          key.label,
+                          style: const TextStyle(fontWeight: FontWeight.w700),
+                        ),
+                        trailing: key == current
+                            ? Icon(Icons.check_circle, color: key.previewColor)
+                            : null,
+                      ),
+                    ),
                   ),
               ],
             ),
@@ -258,5 +253,179 @@ class SettingsPage extends ConsumerWidget {
       if (!context.mounted) return;
       messenger.showSnackBar(SnackBar(content: Text('导出失败: $error')));
     }
+  }
+}
+
+class _FinanceProfile extends StatelessWidget {
+  const _FinanceProfile({
+    required this.totalRecords,
+    required this.distinctDays,
+    required this.currentStreak,
+  });
+
+  final int totalRecords;
+  final int distinctDays;
+  final int currentStreak;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.primaryContainer,
+        borderRadius: BorderRadius.circular(22),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 42,
+                height: 42,
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.primary,
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Icon(
+                  Icons.account_balance_wallet_rounded,
+                  color: theme.colorScheme.onPrimary,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '我的账本',
+                      style: theme.textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    Text(
+                      currentStreak > 0
+                          ? '已连续记账 $currentStreak 天'
+                          : '今天记一笔，继续积累自己的数据',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+          Row(
+            children: [
+              Expanded(
+                child: _ProfileMetric(label: '总记录', value: '$totalRecords 笔'),
+              ),
+              Expanded(
+                child: _ProfileMetric(label: '记账日', value: '$distinctDays 天'),
+              ),
+              Expanded(
+                child: _ProfileMetric(label: '连续', value: '$currentStreak 天'),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ProfileMetric extends StatelessWidget {
+  const _ProfileMetric({required this.label, required this.value});
+
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: theme.textTheme.labelSmall?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
+          ),
+        ),
+        const SizedBox(height: 3),
+        Text(
+          value,
+          style: theme.textTheme.titleSmall?.copyWith(
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _ThemePreview extends StatelessWidget {
+  const _ThemePreview({required this.current, required this.onTap});
+
+  final AppThemeKey current;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.all(14),
+          child: Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '主题外观',
+                      style: theme.textTheme.bodyLarge?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      current.label,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              for (final key in AppThemeKey.values)
+                Container(
+                  width: 22,
+                  height: 22,
+                  margin: const EdgeInsets.only(left: 7),
+                  decoration: BoxDecoration(
+                    color: key.previewColor,
+                    shape: BoxShape.circle,
+                    border: key == current
+                        ? Border.all(
+                            color: theme.colorScheme.onSurface,
+                            width: 2,
+                          )
+                        : null,
+                  ),
+                ),
+              const SizedBox(width: 6),
+              const Icon(Icons.chevron_right),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }

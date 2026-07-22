@@ -21,10 +21,12 @@ class CategoryPieChart extends StatelessWidget {
     super.key,
     required this.sections,
     required this.totalCents,
+    this.centerLabel = '总支出',
   });
 
   final List<PieSection> sections;
   final int totalCents;
+  final String centerLabel;
 
   @override
   Widget build(BuildContext context) {
@@ -68,7 +70,7 @@ class CategoryPieChart extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
-                '总支出',
+                centerLabel,
                 style: theme.textTheme.labelSmall?.copyWith(
                   color: theme.colorScheme.onSurfaceVariant,
                 ),

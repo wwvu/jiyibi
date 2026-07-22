@@ -25,66 +25,84 @@ class CategoryBudgetBar extends StatelessWidget {
     final ratio = budgetCents > 0 ? (usedCents / budgetCents) : 0.0;
     final categoryColor = Color(category.color);
 
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        child: Row(
-          children: [
-            Container(
-              width: 32,
-              height: 32,
-              decoration: BoxDecoration(
-                color: categoryColor.withValues(alpha: 0.15),
-                shape: BoxShape.circle,
-              ),
-              alignment: Alignment.center,
-              child: Text(
-                category.icon,
-                style: TextStyle(
-                  color: categoryColor,
-                  fontWeight: FontWeight.w600,
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
+          child: Row(
+            children: [
+              Container(
+                width: 32,
+                height: 32,
+                decoration: BoxDecoration(
+                  color: categoryColor.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                alignment: Alignment.center,
+                child: Text(
+                  category.icon,
+                  style: TextStyle(
+                    color: categoryColor,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(category.name, style: theme.textTheme.bodyLarge),
-                      Text(
-                        budgetCents > 0
-                            ? '${MoneyUtils.formatYuan(usedCents)} / ${MoneyUtils.formatYuan(budgetCents)}'
-                            : '未设置预算',
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: isOver
-                              ? theme.colorScheme.error
-                              : theme.colorScheme.onSurfaceVariant,
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Expanded(
+                          child: Text(
+                            category.name,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: theme.textTheme.bodyLarge?.copyWith(
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
                         ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 6),
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(6),
-                    child: LinearProgressIndicator(
-                      value: budgetCents > 0 ? ratio.clamp(0.0, 1.0) : 0.0,
-                      minHeight: 8,
-                      backgroundColor:
-                          (isOver ? theme.colorScheme.error : categoryColor)
-                              .withValues(alpha: 0.15),
-                      color: isOver ? theme.colorScheme.error : categoryColor,
+                        const SizedBox(width: 8),
+                        Flexible(
+                          child: FittedBox(
+                            fit: BoxFit.scaleDown,
+                            alignment: Alignment.centerRight,
+                            child: Text(
+                              budgetCents > 0
+                                  ? '${MoneyUtils.formatYuan(usedCents)} / ${MoneyUtils.formatYuan(budgetCents)}'
+                                  : '未设置预算',
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: isOver
+                                    ? theme.colorScheme.error
+                                    : theme.colorScheme.onSurfaceVariant,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
-                  ),
-                ],
+                    const SizedBox(height: 8),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(6),
+                      child: LinearProgressIndicator(
+                        value: budgetCents > 0 ? ratio.clamp(0.0, 1.0) : 0.0,
+                        minHeight: 7,
+                        backgroundColor:
+                            (isOver ? theme.colorScheme.error : categoryColor)
+                                .withValues(alpha: 0.15),
+                        color: isOver ? theme.colorScheme.error : categoryColor,
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

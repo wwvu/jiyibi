@@ -180,7 +180,9 @@ class EditorNotifier extends Notifier<EditorState> {
     ref.invalidate(monthRecordsProvider);
     ref.invalidate(monthSummaryProvider);
     ref.invalidate(monthByCategoryProvider);
+    ref.invalidate(monthByDayProvider);
     ref.invalidate(monthExpenseByCategoryProvider);
+    ref.invalidate(recordStatsProvider);
   }
 
   Future<void> delete() async {
@@ -189,7 +191,9 @@ class EditorNotifier extends Notifier<EditorState> {
     ref.invalidate(monthRecordsProvider);
     ref.invalidate(monthSummaryProvider);
     ref.invalidate(monthByCategoryProvider);
+    ref.invalidate(monthByDayProvider);
     ref.invalidate(monthExpenseByCategoryProvider);
+    ref.invalidate(recordStatsProvider);
   }
 
   String _centsToAmountString(int cents) {

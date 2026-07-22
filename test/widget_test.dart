@@ -8,9 +8,9 @@ void main() {
     // 只 pump 几帧，不 pumpAndSettle（DetailPage 的 FutureProvider 无 DB 会一直 loading）
     await tester.pump(const Duration(milliseconds: 100));
 
+    expect(find.text('首页'), findsWidgets);
     expect(find.text('明细'), findsWidgets);
-    expect(find.text('预算'), findsWidgets);
-    expect(find.text('报表'), findsWidgets);
+    expect(find.text('洞察'), findsWidgets);
     expect(find.text('我的'), findsWidgets);
   });
 }

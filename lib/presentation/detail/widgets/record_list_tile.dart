@@ -23,8 +23,8 @@ class RecordListTile extends StatelessWidget {
     final finance = theme.extension<FinanceColors>();
     final isExpense = record.type == 'expense';
     final amountColor = isExpense
-        ? (finance?.expense ?? const Color(0xFFD85A30))
-        : (finance?.income ?? const Color(0xFF3B6D11));
+        ? (finance?.expense ?? theme.colorScheme.error)
+        : (finance?.income ?? theme.colorScheme.primary);
 
     final categoryName = category?.name ?? '未分类';
     final categoryIcon = category?.icon ?? '？';
@@ -32,29 +32,53 @@ class RecordListTile extends StatelessWidget {
         ? Color(category!.color)
         : theme.colorScheme.outline;
 
-    return ListTile(
-      onTap: onTap,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-      leading: _CategoryBadge(icon: categoryIcon, color: categoryColor),
-      title: Text(
-        record.note?.isNotEmpty == true ? record.note! : categoryName,
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-        style: theme.textTheme.bodyLarge,
-      ),
-      subtitle: Text(
-        categoryName,
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-        style: theme.textTheme.bodySmall?.copyWith(
-          color: theme.colorScheme.onSurfaceVariant,
-        ),
-      ),
-      trailing: Text(
-        MoneyUtils.formatYuan(record.amountCents),
-        style: theme.textTheme.titleSmall?.copyWith(
-          color: amountColor,
-          fontWeight: FontWeight.w600,
+    return Material(
+      color: theme.colorScheme.surface,
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          child: Row(
+            children: [
+              _CategoryBadge(icon: categoryIcon, color: categoryColor),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      record.note?.isNotEmpty == true
+                          ? record.note!
+                          : categoryName,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.bodyLarge?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      categoryName,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 12),
+              Text(
+                MoneyUtils.formatYuan(record.amountCents),
+                style: theme.textTheme.titleSmall?.copyWith(
+                  color: amountColor,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -70,11 +94,11 @@ class _CategoryBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 40,
-      height: 40,
+      width: 44,
+      height: 44,
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.15),
-        shape: BoxShape.circle,
+        color: color.withValues(alpha: 0.13),
+        borderRadius: BorderRadius.circular(14),
       ),
       alignment: Alignment.center,
       child: Text(

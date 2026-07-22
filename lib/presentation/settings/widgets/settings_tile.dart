@@ -18,21 +18,30 @@ class SettingsSection extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.fromLTRB(20, 20, 20, 8),
+          padding: const EdgeInsets.fromLTRB(2, 24, 2, 9),
           child: Text(
             title,
             style: theme.textTheme.labelLarge?.copyWith(
               color: theme.colorScheme.onSurfaceVariant,
+              fontWeight: FontWeight.w700,
             ),
           ),
         ),
         Container(
-          margin: const EdgeInsets.symmetric(horizontal: 12),
           decoration: BoxDecoration(
-            color: theme.colorScheme.surfaceContainerLow,
-            borderRadius: BorderRadius.circular(12),
+            color: theme.colorScheme.surface,
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: theme.colorScheme.outlineVariant),
           ),
-          child: Column(children: children),
+          clipBehavior: Clip.antiAlias,
+          child: Column(
+            children: [
+              for (var i = 0; i < children.length; i++) ...[
+                children[i],
+                if (i != children.length - 1) const Divider(indent: 64),
+              ],
+            ],
+          ),
         ),
       ],
     );
@@ -67,14 +76,27 @@ class SettingsTile extends StatelessWidget {
       type: MaterialType.transparency,
       child: ListTile(
         onTap: onTap,
-        leading: Icon(icon, color: color),
+        minVerticalPadding: 12,
+        leading: Container(
+          width: 36,
+          height: 36,
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: 0.11),
+            borderRadius: BorderRadius.circular(11),
+          ),
+          child: Icon(icon, color: color, size: 20),
+        ),
         title: Text(
           title,
-          style: TextStyle(color: danger ? theme.colorScheme.error : null),
+          style: TextStyle(
+            color: danger ? theme.colorScheme.error : null,
+            fontWeight: FontWeight.w600,
+          ),
         ),
         subtitle: subtitle != null ? Text(subtitle!) : null,
         trailing:
-            trailing ?? (onTap != null ? const Icon(Icons.chevron_right) : null),
+            trailing ??
+            (onTap != null ? const Icon(Icons.chevron_right) : null),
       ),
     );
   }

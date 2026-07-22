@@ -9,12 +9,15 @@ import 'package:jiyibi/data/database/app_database.dart' show Record;
 import 'package:jiyibi/presentation/editor/editor_provider.dart';
 import 'package:jiyibi/presentation/editor/widgets/category_grid.dart';
 import 'package:jiyibi/presentation/editor/widgets/number_pad.dart';
+import 'package:jiyibi/shared/widgets/type_segmented_control.dart';
 
 /// 打开记账弹层（新增模式）。每次打开重置表单。
 void showEditorSheet(BuildContext context) {
   showModalBottomSheet<void>(
     context: context,
     isScrollControlled: true,
+    backgroundColor: Theme.of(context).colorScheme.surface,
+    clipBehavior: Clip.antiAlias,
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
     ),
@@ -27,6 +30,8 @@ void showEditorSheetForEdit(BuildContext context, Record record) {
   showModalBottomSheet<void>(
     context: context,
     isScrollControlled: true,
+    backgroundColor: Theme.of(context).colorScheme.surface,
+    clipBehavior: Clip.antiAlias,
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
     ),
@@ -93,7 +98,7 @@ class _EditorSheetState extends ConsumerState<EditorSheet> {
         child: Column(
           children: [
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+              padding: const EdgeInsets.fromLTRB(18, 10, 18, 0),
               child: Column(
                 children: [
                   Container(
@@ -108,50 +113,59 @@ class _EditorSheetState extends ConsumerState<EditorSheet> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
+                      IconButton(
+                        icon: const Icon(Icons.close),
+                        tooltip: '关闭',
+                        onPressed: () => Navigator.of(context).pop(),
+                      ),
                       Text(
                         state.isEditing ? '编辑记录' : '记一笔',
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w600,
+                        style: theme.textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.w800,
                         ),
                       ),
-                      if (state.isEditing)
-                        IconButton(
-                          icon: Icon(
-                            Icons.delete_outline,
-                            color: theme.colorScheme.error,
-                          ),
-                          onPressed: () => _confirmDelete(),
-                          tooltip: '删除',
+                      IconButton(
+                        icon: Icon(
+                          state.isEditing
+                              ? Icons.delete_outline
+                              : Icons.more_horiz,
+                          color: state.isEditing
+                              ? theme.colorScheme.error
+                              : theme.colorScheme.onSurfaceVariant,
                         ),
+                        onPressed: state.isEditing
+                            ? () => _confirmDelete()
+                            : null,
+                        tooltip: state.isEditing ? '删除' : '更多',
+                      ),
                     ],
                   ),
                   const SizedBox(height: 8),
-                  _TypeToggle(
+                  TypeSegmentedControl(
                     type: state.type,
                     onChanged: (type) =>
                         ref.read(editorProvider.notifier).setType(type),
                   ),
                   const SizedBox(height: 16),
                   _AmountDisplay(amountString: state.amountString),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 10),
                   _DateRow(date: state.date, onTap: () => _pickDate(context)),
                 ],
               ),
             ),
             Expanded(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+                padding: const EdgeInsets.fromLTRB(18, 8, 18, 10),
                 child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Align(
-                      alignment: Alignment.centerLeft,
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 4),
-                        child: Text(
-                          '分类',
-                          style: theme.textTheme.labelLarge?.copyWith(
-                            color: theme.colorScheme.onSurfaceVariant,
-                          ),
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 8),
+                      child: Text(
+                        '分类',
+                        style: theme.textTheme.labelLarge?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                          fontWeight: FontWeight.w700,
                         ),
                       ),
                     ),
@@ -176,11 +190,6 @@ class _EditorSheetState extends ConsumerState<EditorSheet> {
                       controller: _noteController,
                       decoration: InputDecoration(
                         hintText: '添加备注',
-                        hintStyle: TextStyle(
-                          color: theme.colorScheme.onSurfaceVariant,
-                        ),
-                        filled: true,
-                        fillColor: theme.colorScheme.surfaceContainerHighest,
                         prefixIcon: Icon(
                           Icons.edit_outlined,
                           size: 20,
@@ -189,26 +198,6 @@ class _EditorSheetState extends ConsumerState<EditorSheet> {
                         prefixIconConstraints: const BoxConstraints(
                           minWidth: 40,
                           minHeight: 36,
-                        ),
-                        isDense: true,
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 14,
-                          vertical: 14,
-                        ),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide.none,
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide.none,
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(
-                            color: theme.colorScheme.primary,
-                            width: 1.5,
-                          ),
                         ),
                       ),
                       onChanged: (value) =>
@@ -220,7 +209,7 @@ class _EditorSheetState extends ConsumerState<EditorSheet> {
             ),
             if (keyboardHeight == 0) ...[
               Padding(
-                padding: const EdgeInsets.fromLTRB(12, 0, 12, 0),
+                padding: const EdgeInsets.fromLTRB(14, 0, 14, 0),
                 child: NumberPad(
                   onDigit: (digit) =>
                       ref.read(editorProvider.notifier).appendDigit(digit),
@@ -368,87 +357,6 @@ class _EditorSheetState extends ConsumerState<EditorSheet> {
   }
 }
 
-class _TypeToggle extends StatelessWidget {
-  const _TypeToggle({required this.type, required this.onChanged});
-
-  final String type;
-  final ValueChanged<String> onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-
-    return Container(
-      decoration: BoxDecoration(
-        color: colorScheme.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(10),
-      ),
-      padding: const EdgeInsets.all(3),
-      child: Row(
-        children: [
-          Expanded(
-            child: _ToggleButton(
-              label: '支出',
-              isSelected: type == 'expense',
-              color: const Color(0xFFD85A30),
-              onTap: () => onChanged('expense'),
-            ),
-          ),
-          Expanded(
-            child: _ToggleButton(
-              label: '收入',
-              isSelected: type == 'income',
-              color: const Color(0xFF3B6D11),
-              onTap: () => onChanged('income'),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _ToggleButton extends StatelessWidget {
-  const _ToggleButton({
-    required this.label,
-    required this.isSelected,
-    required this.color,
-    required this.onTap,
-  });
-
-  final String label;
-  final bool isSelected;
-  final Color color;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 150),
-        height: 36,
-        alignment: Alignment.center,
-        decoration: BoxDecoration(
-          color: isSelected ? color : Colors.transparent,
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Text(
-          label,
-          style: theme.textTheme.titleSmall?.copyWith(
-            color: isSelected
-                ? theme.colorScheme.onPrimary
-                : theme.colorScheme.onSurfaceVariant,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-      ),
-    );
-  }
-}
-
 class _AmountDisplay extends StatelessWidget {
   const _AmountDisplay({required this.amountString});
 
@@ -459,30 +367,41 @@ class _AmountDisplay extends StatelessWidget {
     final theme = Theme.of(context);
     final display = amountString.isEmpty ? '0.00' : _formatAmount(amountString);
 
-    return SizedBox(
+    return Container(
       width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(18, 14, 18, 16),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: theme.colorScheme.outlineVariant),
+      ),
       child: FittedBox(
         fit: BoxFit.scaleDown,
-        alignment: Alignment.centerLeft,
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.baseline,
-          textBaseline: TextBaseline.alphabetic,
-          children: [
-            Text(
-              '¥',
-              style: theme.textTheme.headlineSmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-                fontWeight: FontWeight.w500,
+        alignment: Alignment.centerRight,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(minWidth: 1),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            crossAxisAlignment: CrossAxisAlignment.baseline,
+            textBaseline: TextBaseline.alphabetic,
+            children: [
+              Text(
+                '¥',
+                style: theme.textTheme.headlineSmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
-            ),
-            const SizedBox(width: 2),
-            Text(
-              display,
-              style: theme.textTheme.displayMedium?.copyWith(
-                fontWeight: FontWeight.bold,
+              const SizedBox(width: 4),
+              Text(
+                display,
+                style: theme.textTheme.displayMedium?.copyWith(
+                  fontWeight: FontWeight.w800,
+                  height: 1,
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -518,16 +437,33 @@ class _DateRow extends StatelessWidget {
     final theme = Theme.of(context);
     final isToday = _isSameDay(date, DateTime.now());
 
-    return Align(
-      alignment: Alignment.centerLeft,
-      child: TextButton.icon(
-        onPressed: onTap,
-        icon: const Icon(Icons.calendar_today_outlined, size: 16),
-        label: Text(
-          isToday
-              ? '今天 ${DateFormat('HH:mm').format(date)}'
-              : DateFormat('M月d日 HH:mm').format(date),
-          style: theme.textTheme.bodyMedium,
+    return Material(
+      color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.56),
+      borderRadius: BorderRadius.circular(14),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(14),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.calendar_today_outlined,
+                size: 16,
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                isToday
+                    ? '今天 ${DateFormat('HH:mm').format(date)}'
+                    : DateFormat('M月d日 HH:mm').format(date),
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

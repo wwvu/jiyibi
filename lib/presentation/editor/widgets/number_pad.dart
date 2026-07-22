@@ -23,79 +23,83 @@ class NumberPad extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      height: 252,
-      child: Row(
-        children: [
-          Expanded(
-            flex: 3,
-            child: Column(
-              children: [
-                Expanded(
-                  child: Row(
-                    children: [
-                      _PadKey(label: '1', onTap: () => onDigit('1')),
-                      _PadKey(label: '2', onTap: () => onDigit('2')),
-                      _PadKey(label: '3', onTap: () => onDigit('3')),
-                    ],
-                  ),
+    final theme = Theme.of(context);
+
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface,
+        border: Border(
+          top: BorderSide(color: theme.colorScheme.outlineVariant),
+        ),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.only(top: 10),
+        child: SizedBox(
+          height: 244,
+          child: Row(
+            children: [
+              Expanded(
+                flex: 3,
+                child: Column(
+                  children: [
+                    Expanded(
+                      child: Row(
+                        children: [
+                          _PadKey(label: '1', onTap: () => onDigit('1')),
+                          _PadKey(label: '2', onTap: () => onDigit('2')),
+                          _PadKey(label: '3', onTap: () => onDigit('3')),
+                        ],
+                      ),
+                    ),
+                    Expanded(
+                      child: Row(
+                        children: [
+                          _PadKey(label: '4', onTap: () => onDigit('4')),
+                          _PadKey(label: '5', onTap: () => onDigit('5')),
+                          _PadKey(label: '6', onTap: () => onDigit('6')),
+                        ],
+                      ),
+                    ),
+                    Expanded(
+                      child: Row(
+                        children: [
+                          _PadKey(label: '7', onTap: () => onDigit('7')),
+                          _PadKey(label: '8', onTap: () => onDigit('8')),
+                          _PadKey(label: '9', onTap: () => onDigit('9')),
+                        ],
+                      ),
+                    ),
+                    Expanded(
+                      child: Row(
+                        children: [
+                          _PadKey(label: '0', onTap: () => onDigit('0')),
+                          _PadKey(label: '.', onTap: onDot),
+                          _PadKey(label: '00', onTap: onDoubleZero),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
-                Expanded(
-                  child: Row(
-                    children: [
-                      _PadKey(label: '4', onTap: () => onDigit('4')),
-                      _PadKey(label: '5', onTap: () => onDigit('5')),
-                      _PadKey(label: '6', onTap: () => onDigit('6')),
-                    ],
-                  ),
+              ),
+              Expanded(
+                flex: 1,
+                child: Column(
+                  children: [
+                    _PadKey(icon: Icons.backspace_outlined, onTap: onBackspace),
+                    _PadKey(
+                      label: '完成',
+                      onTap: onDone,
+                      primary: true,
+                      enabled: doneEnabled,
+                      flex: 2,
+                    ),
+                    _PadKey(label: '今天', onTap: onToday, small: true),
+                  ],
                 ),
-                Expanded(
-                  child: Row(
-                    children: [
-                      _PadKey(label: '7', onTap: () => onDigit('7')),
-                      _PadKey(label: '8', onTap: () => onDigit('8')),
-                      _PadKey(label: '9', onTap: () => onDigit('9')),
-                    ],
-                  ),
-                ),
-                Expanded(
-                  child: Row(
-                    children: [
-                      _PadKey(label: '0', onTap: () => onDigit('0')),
-                      _PadKey(label: '.', onTap: onDot),
-                      _PadKey(label: '00', onTap: onDoubleZero),
-                    ],
-                  ),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
-          Expanded(
-            flex: 1,
-            child: Column(
-              children: [
-                Expanded(
-                  child: _PadKey(
-                    icon: Icons.backspace_outlined,
-                    onTap: onBackspace,
-                  ),
-                ),
-                Expanded(
-                  flex: 2,
-                  child: _PadKey(
-                    label: '完成',
-                    onTap: onDone,
-                    primary: true,
-                    enabled: doneEnabled,
-                  ),
-                ),
-                Expanded(
-                  child: _PadKey(label: '今天', onTap: onToday, small: true),
-                ),
-              ],
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -109,6 +113,7 @@ class _PadKey extends StatelessWidget {
     this.primary = false,
     this.enabled = true,
     this.small = false,
+    this.flex = 1,
   });
 
   final String? label;
@@ -117,6 +122,7 @@ class _PadKey extends StatelessWidget {
   final bool primary;
   final bool enabled;
   final bool small;
+  final int flex;
 
   @override
   Widget build(BuildContext context) {
@@ -125,19 +131,20 @@ class _PadKey extends StatelessWidget {
 
     final backgroundColor = primary
         ? (enabled
-            ? colorScheme.primary
-            : colorScheme.surfaceContainerHighest)
-        : colorScheme.surfaceContainerLow;
+              ? colorScheme.primary
+              : colorScheme.surfaceContainerHighest.withValues(alpha: 0.72))
+        : colorScheme.surfaceContainerHighest.withValues(alpha: 0.48);
     final foregroundColor = primary
         ? (enabled ? colorScheme.onPrimary : colorScheme.onSurfaceVariant)
         : colorScheme.onSurface;
 
     return Expanded(
+      flex: flex,
       child: Padding(
-        padding: const EdgeInsets.all(4),
+        padding: const EdgeInsets.all(5),
         child: Material(
           color: backgroundColor,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(14),
           clipBehavior: Clip.antiAlias,
           child: InkWell(
             onTap: enabled ? onTap : null,
@@ -146,13 +153,16 @@ class _PadKey extends StatelessWidget {
                   ? Icon(icon, color: foregroundColor, size: 24)
                   : Text(
                       label!,
-                      style: (small
-                              ? theme.textTheme.bodyLarge
-                              : theme.textTheme.headlineSmall)
-                          ?.copyWith(
-                            color: foregroundColor,
-                            fontWeight: FontWeight.w600,
-                          ),
+                      style:
+                          (small
+                                  ? theme.textTheme.bodyLarge
+                                  : theme.textTheme.headlineSmall)
+                              ?.copyWith(
+                                color: foregroundColor,
+                                fontWeight: primary
+                                    ? FontWeight.w800
+                                    : FontWeight.w700,
+                              ),
                     ),
             ),
           ),

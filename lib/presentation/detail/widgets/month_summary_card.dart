@@ -19,36 +19,56 @@ class MonthSummaryCard extends StatelessWidget {
     final theme = Theme.of(context);
     final balanceCents = incomeCents - expenseCents;
     final finance = theme.extension<FinanceColors>();
-    final expenseColor = finance?.expense ?? const Color(0xFFD85A30);
-    final incomeColor = finance?.income ?? const Color(0xFF3B6D11);
+    final expenseColor = finance?.expense ?? theme.colorScheme.error;
+    final incomeColor = finance?.income ?? theme.colorScheme.primary;
 
     return Card(
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
-        child: Row(
+        padding: const EdgeInsets.fromLTRB(18, 16, 18, 18),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Expanded(
-              child: _SummaryItem(
-                label: '支出',
-                value: MoneyUtils.formatYuan(expenseCents),
-                valueColor: expenseColor,
+            Text(
+              '本月支出',
+              style: theme.textTheme.labelMedium?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+                fontWeight: FontWeight.w600,
               ),
             ),
-            Container(width: 1, height: 36, color: theme.dividerColor),
-            Expanded(
-              child: _SummaryItem(
-                label: '收入',
-                value: MoneyUtils.formatYuan(incomeCents),
-                valueColor: incomeColor,
+            const SizedBox(height: 6),
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: Alignment.centerLeft,
+              child: Text(
+                MoneyUtils.formatYuan(expenseCents),
+                style: theme.textTheme.headlineMedium?.copyWith(
+                  color: expenseColor,
+                  fontWeight: FontWeight.w800,
+                  height: 1.05,
+                ),
               ),
             ),
-            Container(width: 1, height: 36, color: theme.dividerColor),
-            Expanded(
-              child: _SummaryItem(
-                label: '结余',
-                value: MoneyUtils.formatYuan(balanceCents),
-                valueColor: theme.colorScheme.onSurface,
-              ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Expanded(
+                  child: _SummaryPill(
+                    label: '收入',
+                    value: MoneyUtils.formatYuan(incomeCents),
+                    valueColor: incomeColor,
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: _SummaryPill(
+                    label: '结余',
+                    value: MoneyUtils.formatYuan(balanceCents),
+                    valueColor: balanceCents >= 0
+                        ? theme.colorScheme.onSurface
+                        : expenseColor,
+                  ),
+                ),
+              ],
             ),
           ],
         ),
@@ -57,8 +77,8 @@ class MonthSummaryCard extends StatelessWidget {
   }
 }
 
-class _SummaryItem extends StatelessWidget {
-  const _SummaryItem({
+class _SummaryPill extends StatelessWidget {
+  const _SummaryPill({
     required this.label,
     required this.value,
     required this.valueColor,
@@ -72,27 +92,39 @@ class _SummaryItem extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text(
-          label,
-          style: theme.textTheme.labelSmall?.copyWith(
-            color: theme.colorScheme.onSurfaceVariant,
-          ),
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerHighest.withValues(
+          alpha: 0.55,
         ),
-        const SizedBox(height: 6),
-        FittedBox(
-          fit: BoxFit.scaleDown,
-          child: Text(
-            value,
-            style: theme.textTheme.titleMedium?.copyWith(
-              color: valueColor,
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            label,
+            style: theme.textTheme.labelSmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
               fontWeight: FontWeight.w600,
             ),
           ),
-        ),
-      ],
+          const SizedBox(height: 4),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerLeft,
+            child: Text(
+              value,
+              style: theme.textTheme.titleSmall?.copyWith(
+                color: valueColor,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
