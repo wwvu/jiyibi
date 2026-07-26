@@ -132,4 +132,26 @@ final monthExpenseByCategoryProvider = FutureProvider<Map<int, int>>((
       .getMonthExpenseByCategoryIds(month.year, month.month);
 });
 
+extension RecordDerivedRefInvalidation on Ref {
+  void invalidateRecordDerivedProviders() {
+    invalidate(monthRecordsProvider);
+    invalidate(monthSummaryProvider);
+    invalidate(monthByCategoryProvider);
+    invalidate(monthByDayProvider);
+    invalidate(monthExpenseByCategoryProvider);
+    invalidate(recordStatsProvider);
+  }
+}
+
+extension RecordDerivedWidgetRefInvalidation on WidgetRef {
+  void invalidateRecordDerivedProviders() {
+    invalidate(monthRecordsProvider);
+    invalidate(monthSummaryProvider);
+    invalidate(monthByCategoryProvider);
+    invalidate(monthByDayProvider);
+    invalidate(monthExpenseByCategoryProvider);
+    invalidate(recordStatsProvider);
+  }
+}
+
 /// BudgetPredictor 已在 core/budget_predictor.dart，T3.2 接入。

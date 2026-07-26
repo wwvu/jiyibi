@@ -57,19 +57,22 @@ final editorProvider = NotifierProvider<EditorNotifier, EditorState>(
 );
 
 class EditorNotifier extends Notifier<EditorState> {
+  int _categoryLoadId = 0;
+
   @override
   EditorState build() {
-    _loadLastCategory('expense');
+    _loadLastCategory('expense', ++_categoryLoadId);
     return EditorState(date: DateTime.now());
   }
 
   void reset() {
     state = EditorState(date: DateTime.now());
-    _loadLastCategory('expense');
+    _loadLastCategory('expense', ++_categoryLoadId);
   }
 
   /// 进入编辑模式：用已有记录预填表单。
   void startEdit(Record record) {
+    _categoryLoadId++;
     final amountString = _centsToAmountString(record.amountCents);
     state = EditorState(
       type: record.type,
@@ -85,11 +88,12 @@ class EditorNotifier extends Notifier<EditorState> {
     if (type == state.type) return;
     state = state.copyWith(type: type, clearCategoryId: true);
     if (!state.isEditing) {
-      _loadLastCategory(type);
+      _loadLastCategory(type, ++_categoryLoadId);
     }
   }
 
   void setCategory(int categoryId) {
+    _categoryLoadId++;
     state = state.copyWith(categoryId: categoryId);
   }
 
@@ -178,23 +182,13 @@ class EditorNotifier extends Notifier<EditorState> {
       await prefs.setInt(key, state.categoryId!);
     }
 
-    ref.invalidate(monthRecordsProvider);
-    ref.invalidate(monthSummaryProvider);
-    ref.invalidate(monthByCategoryProvider);
-    ref.invalidate(monthByDayProvider);
-    ref.invalidate(monthExpenseByCategoryProvider);
-    ref.invalidate(recordStatsProvider);
+    ref.invalidateRecordDerivedProviders();
   }
 
   Future<void> delete() async {
     if (!state.isEditing) return;
     await ref.read(recordRepoProvider).delete(state.editingId!);
-    ref.invalidate(monthRecordsProvider);
-    ref.invalidate(monthSummaryProvider);
-    ref.invalidate(monthByCategoryProvider);
-    ref.invalidate(monthByDayProvider);
-    ref.invalidate(monthExpenseByCategoryProvider);
-    ref.invalidate(recordStatsProvider);
+    ref.invalidateRecordDerivedProviders();
   }
 
   String _centsToAmountString(int cents) {
@@ -208,13 +202,16 @@ class EditorNotifier extends Notifier<EditorState> {
     return '$prefix$yuan.$frac';
   }
 
-  Future<void> _loadLastCategory(String type) async {
+  Future<void> _loadLastCategory(String type, int requestId) async {
     final prefs = await SharedPreferences.getInstance();
+    if (requestId != _categoryLoadId || state.type != type || state.isEditing) {
+      return;
+    }
     final key = type == 'expense'
         ? 'lastExpenseCategory'
         : 'lastIncomeCategory';
     final id = prefs.getInt(key);
-    if (id != null) {
+    if (id != null && requestId == _categoryLoadId) {
       state = state.copyWith(categoryId: id);
     }
   }

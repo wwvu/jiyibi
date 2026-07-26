@@ -112,12 +112,7 @@ class _DetailPageState extends ConsumerState<DetailPage> {
 
   Future<void> _deleteRecord(WidgetRef ref, Record record) async {
     await ref.read(recordRepoProvider).delete(record.id);
-    ref.invalidate(monthRecordsProvider);
-    ref.invalidate(monthSummaryProvider);
-    ref.invalidate(monthByCategoryProvider);
-    ref.invalidate(monthByDayProvider);
-    ref.invalidate(monthExpenseByCategoryProvider);
-    ref.invalidate(recordStatsProvider);
+    ref.invalidateRecordDerivedProviders();
   }
 
   void _changeMonth(DateTime month, int delta) {

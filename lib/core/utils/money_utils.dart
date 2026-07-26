@@ -37,11 +37,12 @@ class MoneyUtils {
     if (!RegExp(r'^\d+(\.\d*)?$').hasMatch(body)) return 0;
 
     final parts = body.split('.');
-    final yuanPart = int.tryParse(parts[0]) ?? 0;
     final rawFraction = parts.length == 2 ? parts[1] : '';
     final normalizedFraction = rawFraction.padRight(2, '0');
-    final centsPart = int.tryParse(normalizedFraction.substring(0, 2)) ?? 0;
-    final cents = yuanPart * 100 + centsPart;
+    final cents = int.tryParse(
+      '${parts[0]}${normalizedFraction.substring(0, 2)}',
+    );
+    if (cents == null) return 0;
 
     return isNegative ? -cents : cents;
   }

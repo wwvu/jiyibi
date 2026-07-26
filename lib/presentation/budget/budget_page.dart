@@ -75,38 +75,16 @@ class BudgetPage extends ConsumerWidget {
     required int currentCents,
     required String title,
   }) async {
-    final controller = TextEditingController(
-      text: currentCents > 0 ? MoneyUtils.formatYuanPlain(currentCents) : '',
-    );
-    final confirmed = await showDialog<bool>(
+    final amountText = await showDialog<String>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text(title),
-        content: TextField(
-          controller: controller,
-          keyboardType: const TextInputType.numberWithOptions(decimal: true),
-          decoration: const InputDecoration(
-            prefixText: '¥ ',
-            hintText: '0.00',
-            labelText: '每月预算',
-          ),
-          autofocus: true,
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('取消'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('保存'),
-          ),
-        ],
+      builder: (context) => _BudgetAmountDialog(
+        title: title,
+        initialAmount: currentCents > 0
+            ? MoneyUtils.formatYuanPlain(currentCents)
+            : '',
       ),
     );
-    final amountText = controller.text;
-    controller.dispose();
-    if (confirmed != true) return;
+    if (amountText == null) return;
 
     await ref
         .read(budgetRepoProvider)
@@ -116,6 +94,71 @@ class BudgetPage extends ConsumerWidget {
           amountCents: MoneyUtils.yuanToCents(amountText),
         );
     ref.invalidate(monthBudgetsProvider);
+  }
+}
+
+class _BudgetAmountDialog extends StatefulWidget {
+  const _BudgetAmountDialog({required this.title, required this.initialAmount});
+
+  final String title;
+  final String initialAmount;
+
+  @override
+  State<_BudgetAmountDialog> createState() => _BudgetAmountDialogState();
+}
+
+class _BudgetAmountDialogState extends State<_BudgetAmountDialog> {
+  late final TextEditingController _controller;
+  String? _errorText;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(text: widget.initialAmount);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: Text(widget.title),
+      content: TextField(
+        controller: _controller,
+        keyboardType: const TextInputType.numberWithOptions(decimal: true),
+        decoration: InputDecoration(
+          prefixText: '¥ ',
+          hintText: '0.00',
+          labelText: '每月预算',
+          errorText: _errorText,
+        ),
+        autofocus: true,
+        onChanged: (_) {
+          if (_errorText != null) setState(() => _errorText = null);
+        },
+        onSubmitted: (_) => _submit(),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('取消'),
+        ),
+        FilledButton(onPressed: _submit, child: const Text('保存')),
+      ],
+    );
+  }
+
+  void _submit() {
+    final cents = MoneyUtils.yuanToCents(_controller.text);
+    if (cents <= 0) {
+      setState(() => _errorText = '请输入大于 0 的预算金额');
+      return;
+    }
+    Navigator.of(context).pop(_controller.text);
   }
 }
 

@@ -75,6 +75,7 @@ void main() {
     test('returns zero for invalid formats', () {
       expect(MoneyUtils.yuanToCents('12.a'), 0);
       expect(MoneyUtils.yuanToCents('1.2.3'), 0);
+      expect(MoneyUtils.yuanToCents('999999999999999999999.12'), 0);
     });
   });
 }
