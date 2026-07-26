@@ -325,8 +325,14 @@ class _EditorSheetState extends ConsumerState<EditorSheet> {
 
   Future<void> _save() async {
     final navigator = Navigator.of(context);
-    await ref.read(editorProvider.notifier).save();
-    navigator.pop();
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      await ref.read(editorProvider.notifier).save();
+      navigator.pop();
+    } on Exception {
+      if (!mounted) return;
+      messenger.showSnackBar(const SnackBar(content: Text('保存失败，请重试')));
+    }
   }
 
   Future<void> _confirmDelete() async {
@@ -352,8 +358,14 @@ class _EditorSheetState extends ConsumerState<EditorSheet> {
     if (!mounted || confirmed != true) return;
 
     final navigator = Navigator.of(context);
-    await ref.read(editorProvider.notifier).delete();
-    navigator.pop();
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      await ref.read(editorProvider.notifier).delete();
+      navigator.pop();
+    } on Exception {
+      if (!mounted) return;
+      messenger.showSnackBar(const SnackBar(content: Text('删除失败，请重试')));
+    }
   }
 }
 

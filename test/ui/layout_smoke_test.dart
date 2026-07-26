@@ -110,9 +110,7 @@ void main() {
         monthSummaryProvider.overrideWith(
           (ref) async => (expenseCents: 4060, incomeCents: 860000),
         ),
-        expenseCategoriesProvider.overrideWith(
-          (ref) async => categories.where((c) => c.type == 'expense').toList(),
-        ),
+        allCategoriesProvider.overrideWith((ref) async => categories),
       ],
     );
     expect(tester.takeException(), isNull);

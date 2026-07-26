@@ -27,7 +27,7 @@ class _DetailPageState extends ConsumerState<DetailPage> {
     final month = ref.watch(currentMonthProvider);
     final recordsAsync = ref.watch(monthRecordsProvider);
     final summaryAsync = ref.watch(monthSummaryProvider);
-    final categoriesAsync = ref.watch(expenseCategoriesProvider);
+    final categoriesAsync = ref.watch(allCategoriesProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -159,7 +159,7 @@ class _FilterButton extends StatelessWidget {
   }
 }
 
-class _RecordList extends StatelessWidget {
+class _RecordList extends StatefulWidget {
   const _RecordList({
     required this.records,
     required this.categoryMap,
@@ -171,8 +171,29 @@ class _RecordList extends StatelessWidget {
   final Future<void> Function(Record record) onDelete;
 
   @override
+  State<_RecordList> createState() => _RecordListState();
+}
+
+class _RecordListState extends State<_RecordList> {
+  /// 已 dismiss 但 provider 尚未刷新的记录 id，需立刻从树中移除避免断言崩溃。
+  final _dismissedIds = <int>{};
+
+  @override
+  void didUpdateWidget(_RecordList oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final currentIds = widget.records.map((r) => r.id).toSet();
+    _dismissedIds.removeWhere((id) => !currentIds.contains(id));
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final grouped = _groupByDay(records);
+    final visibleRecords = widget.records
+        .where((record) => !_dismissedIds.contains(record.id))
+        .toList();
+    if (visibleRecords.isEmpty) {
+      return const _EmptyState();
+    }
+    final grouped = _groupByDay(visibleRecords);
 
     return ListView.builder(
       padding: const EdgeInsets.fromLTRB(16, 2, 16, 112),
@@ -184,8 +205,11 @@ class _RecordList extends StatelessWidget {
           date: entry.date,
           dayExpenseCents: entry.dayExpenseCents,
           records: entry.records,
-          categoryMap: categoryMap,
-          onDelete: onDelete,
+          categoryMap: widget.categoryMap,
+          onDelete: (record) {
+            setState(() => _dismissedIds.add(record.id));
+            return widget.onDelete(record);
+          },
         );
       },
     );

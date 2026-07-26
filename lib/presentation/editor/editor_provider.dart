@@ -39,11 +39,12 @@ class EditorState {
     DateTime? date,
     int? editingId,
     bool clearEditingId = false,
+    bool clearCategoryId = false,
   }) {
     return EditorState(
       type: type ?? this.type,
       amountString: amountString ?? this.amountString,
-      categoryId: categoryId ?? this.categoryId,
+      categoryId: clearCategoryId ? null : (categoryId ?? this.categoryId),
       note: note ?? this.note,
       date: date ?? this.date,
       editingId: clearEditingId ? null : (editingId ?? this.editingId),
@@ -82,7 +83,7 @@ class EditorNotifier extends Notifier<EditorState> {
 
   void setType(String type) {
     if (type == state.type) return;
-    state = state.copyWith(type: type, categoryId: null);
+    state = state.copyWith(type: type, clearCategoryId: true);
     if (!state.isEditing) {
       _loadLastCategory(type);
     }
