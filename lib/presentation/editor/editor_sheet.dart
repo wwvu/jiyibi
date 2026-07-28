@@ -5,7 +5,7 @@ import 'package:intl/intl.dart';
 
 import 'package:jiyibi/core/providers.dart';
 import 'package:jiyibi/core/utils/money_utils.dart';
-import 'package:jiyibi/data/database/app_database.dart' show Record;
+import 'package:jiyibi/data/database/app_database.dart' show Account, Record;
 import 'package:jiyibi/presentation/editor/editor_provider.dart';
 import 'package:jiyibi/presentation/editor/widgets/category_grid.dart';
 import 'package:jiyibi/presentation/editor/widgets/number_pad.dart';
@@ -82,6 +82,7 @@ class _EditorSheetState extends ConsumerState<EditorSheet> {
           ? expenseCategoriesProvider
           : incomeCategoriesProvider,
     );
+    final accountsAsync = ref.watch(allAccountsProvider);
     final theme = Theme.of(context);
 
     final mediaQuery = MediaQuery.of(context);
@@ -202,6 +203,45 @@ class _EditorSheetState extends ConsumerState<EditorSheet> {
                       ),
                       onChanged: (value) =>
                           ref.read(editorProvider.notifier).setNote(value),
+                    ),
+                    const SizedBox(height: 10),
+                    accountsAsync.when(
+                      loading: () => const LinearProgressIndicator(),
+                      error: (error, _) => Text('账户加载失败: $error'),
+                      data: (accounts) {
+                        final choices = accounts
+                            .where(
+                              (account) =>
+                                  !account.archived ||
+                                  account.id == state.accountId,
+                            )
+                            .toList();
+                        final selectedExists = choices.any(
+                          (account) => account.id == state.accountId,
+                        );
+                        if (!state.isEditing &&
+                            !selectedExists &&
+                            choices.isNotEmpty) {
+                          WidgetsBinding.instance.addPostFrameCallback((_) {
+                            if (!mounted) return;
+                            final current = ref.read(editorProvider);
+                            if (!current.isEditing &&
+                                !choices.any(
+                                  (account) => account.id == current.accountId,
+                                )) {
+                              ref
+                                  .read(editorProvider.notifier)
+                                  .setAccount(choices.first.id);
+                            }
+                          });
+                        }
+                        return _AccountSelector(
+                          accounts: choices,
+                          selectedId: selectedExists ? state.accountId : null,
+                          onChanged: (id) =>
+                              ref.read(editorProvider.notifier).setAccount(id),
+                        );
+                      },
                     ),
                   ],
                 ),
@@ -366,6 +406,44 @@ class _EditorSheetState extends ConsumerState<EditorSheet> {
       if (!mounted) return;
       messenger.showSnackBar(const SnackBar(content: Text('删除失败，请重试')));
     }
+  }
+}
+
+class _AccountSelector extends StatelessWidget {
+  const _AccountSelector({
+    required this.accounts,
+    required this.selectedId,
+    required this.onChanged,
+  });
+
+  final List<Account> accounts;
+  final int? selectedId;
+  final ValueChanged<int> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return DropdownButtonFormField<int>(
+      initialValue: selectedId,
+      isExpanded: true,
+      decoration: const InputDecoration(
+        prefixIcon: Icon(Icons.account_balance_wallet_outlined, size: 20),
+        labelText: '账户',
+      ),
+      hint: Text(accounts.isEmpty ? '请先创建账户' : '选择账户'),
+      items: [
+        for (final account in accounts)
+          DropdownMenuItem(
+            value: account.id,
+            child: Text(
+              '${account.icon} ${account.name}${account.archived ? '（已归档）' : ''}',
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+      ],
+      onChanged: (id) {
+        if (id != null) onChanged(id);
+      },
+    );
   }
 }
 

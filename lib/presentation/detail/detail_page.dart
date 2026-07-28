@@ -37,6 +37,7 @@ class _DetailPageState extends ConsumerState<DetailPage> {
     final recordsAsync = ref.watch(monthRecordsProvider);
     final summaryAsync = ref.watch(monthSummaryProvider);
     final categoriesAsync = ref.watch(allCategoriesProvider);
+    final accountsAsync = ref.watch(allAccountsProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -83,7 +84,11 @@ class _DetailPageState extends ConsumerState<DetailPage> {
                 const Spacer(),
                 _FilterButton(
                   activeCount: _filter.activeCount,
-                  onTap: () => _showFilters(context, categoriesAsync.value),
+                  onTap: () => _showFilters(
+                    context,
+                    categoriesAsync.value,
+                    accountsAsync.value,
+                  ),
                 ),
               ],
             ),
@@ -94,7 +99,7 @@ class _DetailPageState extends ConsumerState<DetailPage> {
               child: SearchBar(
                 controller: _searchController,
                 autoFocus: true,
-                hintText: '搜索备注、商户或分类',
+                hintText: '搜索备注、分类或账户',
                 leading: const Icon(Icons.search, size: 20),
                 trailing: [
                   if (_searchQuery.isNotEmpty)
@@ -133,6 +138,10 @@ class _DetailPageState extends ConsumerState<DetailPage> {
                   final categoryMap = <int, Category>{
                     for (final category in categories) category.id: category,
                   };
+                  final accountMap = <int, Account>{
+                    for (final account in accountsAsync.value ?? <Account>[])
+                      account.id: account,
+                  };
                   final filteredRecords = records.where((record) {
                     if (_filter.type != 'all' && record.type != _filter.type) {
                       return false;
@@ -141,13 +150,17 @@ class _DetailPageState extends ConsumerState<DetailPage> {
                         record.categoryId != _filter.categoryId) {
                       return false;
                     }
+                    if (_filter.accountId != null &&
+                        record.accountId != _filter.accountId) {
+                      return false;
+                    }
                     if (_searchQuery.isEmpty) return true;
                     final categoryName =
                         categoryMap[record.categoryId]?.name ?? '';
                     return [
                       record.note ?? '',
-                      record.merchant ?? '',
                       categoryName,
+                      accountMap[record.accountId]?.name ?? '',
                     ].any(
                       (value) => value.toLowerCase().contains(_searchQuery),
                     );
@@ -158,6 +171,7 @@ class _DetailPageState extends ConsumerState<DetailPage> {
                   return _RecordList(
                     records: filteredRecords,
                     categoryMap: categoryMap,
+                    accountMap: accountMap,
                     onDelete: (record) => _deleteRecord(ref, record),
                   );
                 },
@@ -186,14 +200,16 @@ class _DetailPageState extends ConsumerState<DetailPage> {
   Future<void> _showFilters(
     BuildContext context,
     List<Category>? categories,
+    List<Account>? accounts,
   ) async {
-    if (categories == null) return;
+    if (categories == null || accounts == null) return;
     final next = await showModalBottomSheet<_RecordFilter>(
       context: context,
       showDragHandle: true,
       builder: (context) => _FilterSheet(
         initial: _filter,
         categories: categories.where((category) => !category.archived).toList(),
+        accounts: accounts.where((account) => !account.archived).toList(),
       ),
     );
     if (next != null && mounted) setState(() => _filter = next);
@@ -217,19 +233,28 @@ class _FilterButton extends StatelessWidget {
 }
 
 class _RecordFilter {
-  const _RecordFilter({this.type = 'all', this.categoryId});
+  const _RecordFilter({this.type = 'all', this.categoryId, this.accountId});
 
   final String type;
   final int? categoryId;
+  final int? accountId;
 
-  int get activeCount => (type == 'all' ? 0 : 1) + (categoryId == null ? 0 : 1);
+  int get activeCount =>
+      (type == 'all' ? 0 : 1) +
+      (categoryId == null ? 0 : 1) +
+      (accountId == null ? 0 : 1);
 }
 
 class _FilterSheet extends StatefulWidget {
-  const _FilterSheet({required this.initial, required this.categories});
+  const _FilterSheet({
+    required this.initial,
+    required this.categories,
+    required this.accounts,
+  });
 
   final _RecordFilter initial;
   final List<Category> categories;
+  final List<Account> accounts;
 
   @override
   State<_FilterSheet> createState() => _FilterSheetState();
@@ -238,12 +263,14 @@ class _FilterSheet extends StatefulWidget {
 class _FilterSheetState extends State<_FilterSheet> {
   late String _type;
   int? _categoryId;
+  int? _accountId;
 
   @override
   void initState() {
     super.initState();
     _type = widget.initial.type;
     _categoryId = widget.initial.categoryId;
+    _accountId = widget.initial.accountId;
   }
 
   @override
@@ -277,6 +304,7 @@ class _FilterSheetState extends State<_FilterSheet> {
                   onPressed: () => setState(() {
                     _type = 'all';
                     _categoryId = null;
+                    _accountId = null;
                   }),
                   child: const Text('重置'),
                 ),
@@ -329,13 +357,48 @@ class _FilterSheetState extends State<_FilterSheet> {
                 ),
               ),
             ),
+            const SizedBox(height: 18),
+            Text(
+              '账户',
+              style: theme.textTheme.labelLarge?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(height: 8),
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: [
+                  FilterChip(
+                    label: const Text('不限'),
+                    selected: _accountId == null,
+                    onSelected: (_) => setState(() => _accountId = null),
+                  ),
+                  for (final account in widget.accounts) ...[
+                    const SizedBox(width: 8),
+                    FilterChip(
+                      avatar: Text(account.icon),
+                      label: Text(account.name),
+                      selected: _accountId == account.id,
+                      onSelected: (_) =>
+                          setState(() => _accountId = account.id),
+                    ),
+                  ],
+                ],
+              ),
+            ),
             const SizedBox(height: 20),
             SizedBox(
               width: double.infinity,
               child: FilledButton(
-                onPressed: () => Navigator.of(
-                  context,
-                ).pop(_RecordFilter(type: _type, categoryId: _categoryId)),
+                onPressed: () => Navigator.of(context).pop(
+                  _RecordFilter(
+                    type: _type,
+                    categoryId: _categoryId,
+                    accountId: _accountId,
+                  ),
+                ),
                 child: const Text('查看结果'),
               ),
             ),
@@ -350,11 +413,13 @@ class _RecordList extends StatefulWidget {
   const _RecordList({
     required this.records,
     required this.categoryMap,
+    required this.accountMap,
     required this.onDelete,
   });
 
   final List<Record> records;
   final Map<int, Category> categoryMap;
+  final Map<int, Account> accountMap;
   final Future<void> Function(Record record) onDelete;
 
   @override
@@ -393,6 +458,7 @@ class _RecordListState extends State<_RecordList> {
           dayExpenseCents: entry.dayExpenseCents,
           records: entry.records,
           categoryMap: widget.categoryMap,
+          accountMap: widget.accountMap,
           onDelete: (record) {
             setState(() => _dismissedIds.add(record.id));
             return widget.onDelete(record);
@@ -445,6 +511,7 @@ class _DayGroup extends StatelessWidget {
     required this.dayExpenseCents,
     required this.records,
     required this.categoryMap,
+    required this.accountMap,
     required this.onDelete,
   });
 
@@ -453,6 +520,7 @@ class _DayGroup extends StatelessWidget {
   final int dayExpenseCents;
   final List<Record> records;
   final Map<int, Category> categoryMap;
+  final Map<int, Account> accountMap;
   final Future<void> Function(Record record) onDelete;
 
   @override
@@ -512,6 +580,7 @@ class _DayGroup extends StatelessWidget {
                       category: records[i].categoryId == null
                           ? null
                           : categoryMap[records[i].categoryId],
+                      account: accountMap[records[i].accountId],
                       onTap: () => showEditorSheetForEdit(context, records[i]),
                     ),
                   ),

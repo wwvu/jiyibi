@@ -107,6 +107,10 @@ final allAccountsProvider = FutureProvider<List<Account>>((ref) async {
   return ref.read(accountRepoProvider).getAll(includeArchived: true);
 });
 
+final accountBalancesProvider = FutureProvider<Map<int, int>>((ref) async {
+  return ref.read(accountRepoProvider).getCurrentBalances();
+});
+
 /// 记账统计：总记录数、记账天数、连续记账天数。
 final recordStatsProvider =
     FutureProvider<({int totalRecords, int distinctDays, int currentStreak})>((
@@ -140,6 +144,7 @@ extension RecordDerivedRefInvalidation on Ref {
     invalidate(monthByDayProvider);
     invalidate(monthExpenseByCategoryProvider);
     invalidate(recordStatsProvider);
+    invalidate(accountBalancesProvider);
   }
 }
 
@@ -151,6 +156,22 @@ extension RecordDerivedWidgetRefInvalidation on WidgetRef {
     invalidate(monthByDayProvider);
     invalidate(monthExpenseByCategoryProvider);
     invalidate(recordStatsProvider);
+    invalidate(accountBalancesProvider);
+  }
+}
+
+extension ManagementRefInvalidation on WidgetRef {
+  void invalidateCategoryProviders() {
+    invalidate(expenseCategoriesProvider);
+    invalidate(incomeCategoriesProvider);
+    invalidate(allCategoriesProvider);
+    invalidate(monthByCategoryProvider);
+    invalidate(monthExpenseByCategoryProvider);
+  }
+
+  void invalidateAccountProviders() {
+    invalidate(allAccountsProvider);
+    invalidate(accountBalancesProvider);
   }
 }
 

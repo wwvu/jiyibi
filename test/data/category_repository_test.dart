@@ -43,6 +43,14 @@ void main() {
     expect(expense.any((c) => c.name == '餐饮'), isTrue);
   });
 
+  test('archived category can be restored', () async {
+    await repo.setArchived(1, true);
+    await repo.setArchived(1, false);
+
+    final expense = await repo.getAll(type: 'expense');
+    expect(expense.any((category) => category.id == 1), isTrue);
+  });
+
   test('insert throws on duplicate (name, type)', () async {
     expect(
       () => repo.insert(

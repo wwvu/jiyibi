@@ -10,11 +10,13 @@ class RecordListTile extends StatelessWidget {
     super.key,
     required this.record,
     required this.category,
+    this.account,
     required this.onTap,
   });
 
   final Record record;
   final Category? category;
+  final Account? account;
   final VoidCallback onTap;
 
   @override
@@ -31,6 +33,11 @@ class RecordListTile extends StatelessWidget {
     final categoryColor = category != null
         ? Color(category!.color)
         : theme.colorScheme.outline;
+    final title = record.note?.isNotEmpty == true ? record.note! : categoryName;
+    final contextParts = <String>[
+      categoryName,
+      if (account != null) account!.name,
+    ];
 
     return Material(
       color: theme.colorScheme.surface,
@@ -48,9 +55,7 @@ class RecordListTile extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
-                      record.note?.isNotEmpty == true
-                          ? record.note!
-                          : categoryName,
+                      title,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: theme.textTheme.bodyLarge?.copyWith(
@@ -59,7 +64,7 @@ class RecordListTile extends StatelessWidget {
                     ),
                     const SizedBox(height: 3),
                     Text(
-                      categoryName,
+                      contextParts.join(' · '),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: theme.textTheme.bodySmall?.copyWith(

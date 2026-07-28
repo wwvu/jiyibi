@@ -12,6 +12,7 @@ class EditorState {
     this.amountString = '',
     this.categoryId,
     this.note = '',
+    this.accountId,
     this.editingId,
     required this.date,
   });
@@ -20,6 +21,7 @@ class EditorState {
   final String amountString;
   final int? categoryId;
   final String note;
+  final int? accountId;
   final DateTime date;
 
   /// 非 null 表示编辑模式（editingId = 记录 id）；null 表示新增模式。
@@ -29,23 +31,27 @@ class EditorState {
 
   int get amountCents => MoneyUtils.yuanToCents(amountString);
 
-  bool get canSave => amountCents > 0 && categoryId != null;
+  bool get canSave =>
+      amountCents > 0 && categoryId != null && accountId != null;
 
   EditorState copyWith({
     String? type,
     String? amountString,
     int? categoryId,
     String? note,
+    int? accountId,
     DateTime? date,
     int? editingId,
     bool clearEditingId = false,
     bool clearCategoryId = false,
+    bool clearAccountId = false,
   }) {
     return EditorState(
       type: type ?? this.type,
       amountString: amountString ?? this.amountString,
       categoryId: clearCategoryId ? null : (categoryId ?? this.categoryId),
       note: note ?? this.note,
+      accountId: clearAccountId ? null : (accountId ?? this.accountId),
       date: date ?? this.date,
       editingId: clearEditingId ? null : (editingId ?? this.editingId),
     );
@@ -79,6 +85,7 @@ class EditorNotifier extends Notifier<EditorState> {
       amountString: amountString,
       categoryId: record.categoryId,
       note: record.note ?? '',
+      accountId: record.accountId,
       date: record.date,
       editingId: record.id,
     );
@@ -99,6 +106,10 @@ class EditorNotifier extends Notifier<EditorState> {
 
   void setNote(String note) {
     state = state.copyWith(note: note);
+  }
+
+  void setAccount(int accountId) {
+    state = state.copyWith(accountId: accountId);
   }
 
   void setDate(DateTime date) {
@@ -160,7 +171,8 @@ class EditorNotifier extends Notifier<EditorState> {
           type: Value(state.type),
           amountCents: Value(state.amountCents),
           categoryId: Value(state.categoryId),
-          note: Value(state.note.isEmpty ? null : state.note),
+          note: Value(state.note.trim().isEmpty ? null : state.note.trim()),
+          accountId: Value(state.accountId!),
           date: Value(state.date),
         ),
       );
@@ -171,7 +183,8 @@ class EditorNotifier extends Notifier<EditorState> {
           type: Value(state.type),
           amountCents: state.amountCents,
           categoryId: Value(state.categoryId),
-          note: Value(state.note.isEmpty ? null : state.note),
+          note: Value(state.note.trim().isEmpty ? null : state.note.trim()),
+          accountId: Value(state.accountId!),
         ),
       );
 

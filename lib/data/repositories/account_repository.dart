@@ -39,8 +39,29 @@ class AccountRepository {
 
   /// 归档账户（软删除），不物理删除。
   Future<int> archive(int id) {
+    return setArchived(id, true);
+  }
+
+  Future<int> setArchived(int id, bool archived) {
     return (_db.update(_db.accounts)..where((a) => a.id.equals(id))).write(
-      const AccountsCompanion(archived: Value(true)),
+      AccountsCompanion(archived: Value(archived)),
     );
+  }
+
+  /// 当前余额 = 期初余额 + 收入 - 支出，全部在 cents 域计算。
+  Future<Map<int, int>> getCurrentBalances() async {
+    final accounts = await getAll(includeArchived: true);
+    final balances = <int, int>{
+      for (final account in accounts) account.id: account.balanceCents,
+    };
+    final records = await _db.select(_db.records).get();
+    for (final record in records) {
+      final current = balances[record.accountId];
+      if (current == null) continue;
+      balances[record.accountId] = record.type == 'income'
+          ? current + record.amountCents
+          : current - record.amountCents;
+    }
+    return balances;
   }
 }

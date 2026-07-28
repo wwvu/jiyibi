@@ -43,8 +43,12 @@ class CategoryRepository {
 
   /// 归档分类（软删除），不物理删除。
   Future<int> archive(int id) {
+    return setArchived(id, true);
+  }
+
+  Future<int> setArchived(int id, bool archived) {
     return (_db.update(_db.categories)..where((c) => c.id.equals(id))).write(
-      const CategoriesCompanion(archived: Value(true)),
+      CategoriesCompanion(archived: Value(archived)),
     );
   }
 }

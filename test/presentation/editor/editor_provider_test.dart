@@ -1,5 +1,7 @@
+import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:jiyibi/core/providers.dart';
 import 'package:jiyibi/data/database/app_database.dart';
 import 'package:jiyibi/presentation/editor/editor_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -30,6 +32,28 @@ void main() {
     await Future<void>.delayed(Duration.zero);
 
     expect(container.read(editorProvider).categoryId, 2);
+  });
+
+  test('save persists selected account', () async {
+    final database = AppDatabase.forTesting(NativeDatabase.memory());
+    addTearDown(database.close);
+    final container = ProviderContainer(
+      overrides: [databaseProvider.overrideWithValue(database)],
+    );
+    addTearDown(container.dispose);
+    final notifier = container.read(editorProvider.notifier);
+
+    notifier
+      ..setCategory(1)
+      ..setAccount(1)
+      ..appendDigit('2')
+      ..appendDigit('5');
+    await notifier.save();
+
+    final records = await container.read(recordRepoProvider).getAll();
+    expect(records, hasLength(1));
+    expect(records.single.accountId, 1);
+    expect(records.single.amountCents, 2500);
   });
 }
 

@@ -6,6 +6,8 @@ import 'package:jiyibi/core/theme/app_theme.dart';
 import 'package:jiyibi/core/theme/theme_provider.dart';
 import 'package:jiyibi/data/database/app_database.dart';
 import 'package:jiyibi/data/export/csv_exporter.dart';
+import 'package:jiyibi/presentation/settings/account_management_page.dart';
+import 'package:jiyibi/presentation/settings/category_management_page.dart';
 import 'package:jiyibi/presentation/settings/widgets/settings_tile.dart';
 
 class SettingsPage extends ConsumerWidget {
@@ -63,7 +65,11 @@ class SettingsPage extends ConsumerWidget {
                           '${cats.where((c) => !c.archived).length} 个分类',
                     ) ??
                     '加载中…',
-                onTap: () => _showComingSoon(context, '分类管理将在下一版本开放'),
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => const CategoryManagementPage(),
+                  ),
+                ),
               ),
               SettingsTile(
                 icon: Icons.account_balance_wallet_outlined,
@@ -74,7 +80,11 @@ class SettingsPage extends ConsumerWidget {
                           '${accounts.where((a) => !a.archived).length} 个账户',
                     ) ??
                     '加载中…',
-                onTap: () => _showComingSoon(context, '账户管理将在下一版本开放'),
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => const AccountManagementPage(),
+                  ),
+                ),
               ),
             ],
           ),

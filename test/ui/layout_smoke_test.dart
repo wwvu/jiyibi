@@ -12,6 +12,8 @@ import 'package:jiyibi/presentation/editor/editor_sheet.dart';
 import 'package:jiyibi/presentation/overview/overview_page.dart';
 import 'package:jiyibi/presentation/report/report_page.dart';
 import 'package:jiyibi/presentation/settings/settings_page.dart';
+import 'package:jiyibi/presentation/settings/account_management_page.dart';
+import 'package:jiyibi/presentation/settings/category_management_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
@@ -19,6 +21,7 @@ void main() {
   late List<Category> categories;
   late List<Record> records;
   late List<Budget> budgets;
+  late List<Account> accounts;
 
   setUpAll(() async {
     await initializeDateFormatting('zh_CN');
@@ -89,6 +92,9 @@ void main() {
         categoryId: 1,
       ),
     ];
+    accounts = const [
+      Account(id: 1, name: '现金', balanceCents: 0, icon: '现', archived: false),
+    ];
   });
 
   testWidgets('overview fits a compact Android viewport', (tester) async {
@@ -112,6 +118,7 @@ void main() {
           (ref) async => (expenseCents: 4060, incomeCents: 860000),
         ),
         allCategoriesProvider.overrideWith((ref) async => categories),
+        allAccountsProvider.overrideWith((ref) async => accounts),
       ],
     );
     expect(tester.takeException(), isNull);
@@ -128,6 +135,7 @@ void main() {
           (ref) async => (expenseCents: 4060, incomeCents: 860000),
         ),
         allCategoriesProvider.overrideWith((ref) async => categories),
+        allAccountsProvider.overrideWith((ref) async => accounts),
       ],
     );
 
@@ -197,6 +205,35 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  testWidgets('category management fits a compact Android viewport', (
+    tester,
+  ) async {
+    await _setPhoneSize(tester);
+    await _pump(
+      tester,
+      const CategoryManagementPage(),
+      overrides: [
+        allCategoriesProvider.overrideWith((ref) async => categories),
+      ],
+    );
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('account management fits a compact Android viewport', (
+    tester,
+  ) async {
+    await _setPhoneSize(tester);
+    await _pump(
+      tester,
+      const AccountManagementPage(),
+      overrides: [
+        allAccountsProvider.overrideWith((ref) async => accounts),
+        accountBalancesProvider.overrideWith((ref) async => {1: 123456}),
+      ],
+    );
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('record editor fits a compact Android viewport', (tester) async {
     await _setPhoneSize(tester);
     await _pump(
@@ -218,6 +255,7 @@ void main() {
         incomeCategoriesProvider.overrideWith(
           (ref) async => categories.where((c) => c.type == 'income').toList(),
         ),
+        allAccountsProvider.overrideWith((ref) async => accounts),
       ],
     );
     await tester.tap(find.text('记一笔'));
