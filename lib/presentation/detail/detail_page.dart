@@ -20,7 +20,16 @@ class DetailPage extends ConsumerStatefulWidget {
 }
 
 class _DetailPageState extends ConsumerState<DetailPage> {
-  String _filter = 'all';
+  final _searchController = TextEditingController();
+  var _filter = const _RecordFilter();
+  var _searchQuery = '';
+  var _showSearch = false;
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -36,6 +45,19 @@ class _DetailPageState extends ConsumerState<DetailPage> {
           child: Text('收支明细'),
         ),
         actions: [
+          IconButton(
+            icon: Icon(_showSearch ? Icons.search_off_rounded : Icons.search),
+            tooltip: _showSearch ? '关闭搜索' : '搜索明细',
+            onPressed: () {
+              setState(() {
+                _showSearch = !_showSearch;
+                if (!_showSearch) {
+                  _searchController.clear();
+                  _searchQuery = '';
+                }
+              });
+            },
+          ),
           IconButton(
             icon: const Icon(Icons.calendar_month_outlined),
             tooltip: '日历视图',
@@ -60,12 +82,35 @@ class _DetailPageState extends ConsumerState<DetailPage> {
                 ),
                 const Spacer(),
                 _FilterButton(
-                  value: _filter,
-                  onChanged: (value) => setState(() => _filter = value),
+                  activeCount: _filter.activeCount,
+                  onTap: () => _showFilters(context, categoriesAsync.value),
                 ),
               ],
             ),
           ),
+          if (_showSearch)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 4, 16, 6),
+              child: SearchBar(
+                controller: _searchController,
+                autoFocus: true,
+                hintText: '搜索备注、商户或分类',
+                leading: const Icon(Icons.search, size: 20),
+                trailing: [
+                  if (_searchQuery.isNotEmpty)
+                    IconButton(
+                      icon: const Icon(Icons.close, size: 20),
+                      tooltip: '清空',
+                      onPressed: () {
+                        _searchController.clear();
+                        setState(() => _searchQuery = '');
+                      },
+                    ),
+                ],
+                onChanged: (value) =>
+                    setState(() => _searchQuery = value.trim().toLowerCase()),
+              ),
+            ),
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
             child: summaryAsync.when(
@@ -85,17 +130,31 @@ class _DetailPageState extends ConsumerState<DetailPage> {
                 loading: () => const Center(child: CircularProgressIndicator()),
                 error: (error, _) => _ErrorBanner(message: '$error'),
                 data: (categories) {
-                  final filteredRecords = _filter == 'all'
-                      ? records
-                      : records
-                            .where((record) => record.type == _filter)
-                            .toList();
-                  if (filteredRecords.isEmpty) {
-                    return const _EmptyState();
-                  }
                   final categoryMap = <int, Category>{
                     for (final category in categories) category.id: category,
                   };
+                  final filteredRecords = records.where((record) {
+                    if (_filter.type != 'all' && record.type != _filter.type) {
+                      return false;
+                    }
+                    if (_filter.categoryId != null &&
+                        record.categoryId != _filter.categoryId) {
+                      return false;
+                    }
+                    if (_searchQuery.isEmpty) return true;
+                    final categoryName =
+                        categoryMap[record.categoryId]?.name ?? '';
+                    return [
+                      record.note ?? '',
+                      record.merchant ?? '',
+                      categoryName,
+                    ].any(
+                      (value) => value.toLowerCase().contains(_searchQuery),
+                    );
+                  }).toList();
+                  if (filteredRecords.isEmpty) {
+                    return _EmptyState(isFiltered: _hasActiveQuery);
+                  }
                   return _RecordList(
                     records: filteredRecords,
                     categoryMap: categoryMap,
@@ -120,36 +179,169 @@ class _DetailPageState extends ConsumerState<DetailPage> {
         .read(currentMonthProvider.notifier)
         .setMonth(DateTime(month.year, month.month + delta));
   }
+
+  bool get _hasActiveQuery =>
+      _searchQuery.isNotEmpty || _filter.activeCount > 0;
+
+  Future<void> _showFilters(
+    BuildContext context,
+    List<Category>? categories,
+  ) async {
+    if (categories == null) return;
+    final next = await showModalBottomSheet<_RecordFilter>(
+      context: context,
+      showDragHandle: true,
+      builder: (context) => _FilterSheet(
+        initial: _filter,
+        categories: categories.where((category) => !category.archived).toList(),
+      ),
+    );
+    if (next != null && mounted) setState(() => _filter = next);
+  }
 }
 
 class _FilterButton extends StatelessWidget {
-  const _FilterButton({required this.value, required this.onChanged});
+  const _FilterButton({required this.activeCount, required this.onTap});
 
-  final String value;
-  final ValueChanged<String> onChanged;
+  final int activeCount;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    final labels = {'all': '全部', 'expense': '支出', 'income': '收入'};
-    return MenuAnchor(
-      builder: (context, controller, child) {
-        return OutlinedButton.icon(
-          onPressed: () =>
-              controller.isOpen ? controller.close() : controller.open(),
-          icon: const Icon(Icons.filter_list_rounded, size: 18),
-          label: Text(labels[value]!),
-        );
-      },
-      menuChildren: [
-        for (final entry in labels.entries)
-          MenuItemButton(
-            onPressed: () => onChanged(entry.key),
-            leadingIcon: value == entry.key
-                ? const Icon(Icons.check_rounded)
-                : const SizedBox(width: 24),
-            child: Text(entry.value),
-          ),
-      ],
+    return OutlinedButton.icon(
+      onPressed: onTap,
+      icon: const Icon(Icons.filter_list_rounded, size: 18),
+      label: Text(activeCount == 0 ? '筛选' : '筛选 $activeCount'),
+    );
+  }
+}
+
+class _RecordFilter {
+  const _RecordFilter({this.type = 'all', this.categoryId});
+
+  final String type;
+  final int? categoryId;
+
+  int get activeCount => (type == 'all' ? 0 : 1) + (categoryId == null ? 0 : 1);
+}
+
+class _FilterSheet extends StatefulWidget {
+  const _FilterSheet({required this.initial, required this.categories});
+
+  final _RecordFilter initial;
+  final List<Category> categories;
+
+  @override
+  State<_FilterSheet> createState() => _FilterSheetState();
+}
+
+class _FilterSheetState extends State<_FilterSheet> {
+  late String _type;
+  int? _categoryId;
+
+  @override
+  void initState() {
+    super.initState();
+    _type = widget.initial.type;
+    _categoryId = widget.initial.categoryId;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final visibleCategories = widget.categories
+        .where((category) => _type == 'all' || category.type == _type)
+        .toList();
+    if (_categoryId != null &&
+        !visibleCategories.any((category) => category.id == _categoryId)) {
+      _categoryId = null;
+    }
+
+    return SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(20, 4, 20, 20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Text(
+                  '筛选明细',
+                  style: theme.textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                const Spacer(),
+                TextButton(
+                  onPressed: () => setState(() {
+                    _type = 'all';
+                    _categoryId = null;
+                  }),
+                  child: const Text('重置'),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            SegmentedButton<String>(
+              segments: const [
+                ButtonSegment(value: 'all', label: Text('全部')),
+                ButtonSegment(value: 'expense', label: Text('支出')),
+                ButtonSegment(value: 'income', label: Text('收入')),
+              ],
+              selected: {_type},
+              showSelectedIcon: false,
+              onSelectionChanged: (selected) => setState(() {
+                _type = selected.first;
+                _categoryId = null;
+              }),
+            ),
+            const SizedBox(height: 20),
+            Text(
+              '分类',
+              style: theme.textTheme.labelLarge?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(height: 8),
+            ConstrainedBox(
+              constraints: const BoxConstraints(maxHeight: 180),
+              child: SingleChildScrollView(
+                child: Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    FilterChip(
+                      label: const Text('不限'),
+                      selected: _categoryId == null,
+                      onSelected: (_) => setState(() => _categoryId = null),
+                    ),
+                    for (final category in visibleCategories)
+                      FilterChip(
+                        avatar: Text(category.icon),
+                        label: Text(category.name),
+                        selected: _categoryId == category.id,
+                        onSelected: (_) =>
+                            setState(() => _categoryId = category.id),
+                      ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 20),
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton(
+                onPressed: () => Navigator.of(
+                  context,
+                ).pop(_RecordFilter(type: _type, categoryId: _categoryId)),
+                child: const Text('查看结果'),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -365,7 +557,9 @@ class _DayGroup extends StatelessWidget {
 }
 
 class _EmptyState extends StatelessWidget {
-  const _EmptyState();
+  const _EmptyState({this.isFiltered = false});
+
+  final bool isFiltered;
 
   @override
   Widget build(BuildContext context) {
@@ -383,10 +577,13 @@ class _EmptyState extends StatelessWidget {
               color: theme.colorScheme.outline,
             ),
             const SizedBox(height: 16),
-            Text('本月还没有记录', style: theme.textTheme.titleMedium),
+            Text(
+              isFiltered ? '没有符合条件的记录' : '本月还没有记录',
+              style: theme.textTheme.titleMedium,
+            ),
             const SizedBox(height: 8),
             Text(
-              '点击底部的 + 记一笔吧',
+              isFiltered ? '换个关键词或调整筛选条件' : '点击底部的 + 记一笔吧',
               style: theme.textTheme.bodySmall?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
               ),

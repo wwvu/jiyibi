@@ -7,6 +7,7 @@ import 'package:jiyibi/core/theme/app_theme.dart';
 import 'package:jiyibi/data/database/app_database.dart';
 import 'package:jiyibi/presentation/budget/budget_page.dart';
 import 'package:jiyibi/presentation/detail/detail_page.dart';
+import 'package:jiyibi/presentation/detail/widgets/record_list_tile.dart';
 import 'package:jiyibi/presentation/editor/editor_sheet.dart';
 import 'package:jiyibi/presentation/overview/overview_page.dart';
 import 'package:jiyibi/presentation/report/report_page.dart';
@@ -114,6 +115,35 @@ void main() {
       ],
     );
     expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('detail search matches notes and category names', (tester) async {
+    await _setPhoneSize(tester);
+    await _pump(
+      tester,
+      const DetailPage(),
+      overrides: [
+        monthRecordsProvider.overrideWith((ref) async => records),
+        monthSummaryProvider.overrideWith(
+          (ref) async => (expenseCents: 4060, incomeCents: 860000),
+        ),
+        allCategoriesProvider.overrideWith((ref) async => categories),
+      ],
+    );
+
+    await tester.tap(find.byTooltip('搜索明细'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(SearchBar), '午餐');
+    await tester.pump();
+
+    expect(find.byType(RecordListTile), findsOneWidget);
+    expect(find.text('地铁'), findsNothing);
+
+    await tester.enterText(find.byType(SearchBar), '交通');
+    await tester.pump();
+    expect(find.text('地铁'), findsOneWidget);
+    expect(find.text('午餐'), findsNothing);
+    expect(find.byType(RecordListTile), findsOneWidget);
   });
 
   testWidgets('budget fits a compact Android viewport', (tester) async {
