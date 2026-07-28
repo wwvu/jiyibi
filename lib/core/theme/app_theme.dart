@@ -2,72 +2,32 @@ import 'package:flutter/material.dart';
 
 import 'package:jiyibi/core/constants.dart';
 
-enum AppThemeKey { pine, sun, mist, sakura, night }
-
-extension AppThemeKeyLabel on AppThemeKey {
-  String get label => switch (this) {
-    AppThemeKey.pine => '青松',
-    AppThemeKey.sun => '暖阳',
-    AppThemeKey.mist => '雾兰',
-    AppThemeKey.sakura => '樱粉',
-    AppThemeKey.night => '暗夜',
-  };
-
-  Color get previewColor => switch (this) {
-    AppThemeKey.pine => const Color(0xFF0F6E56),
-    AppThemeKey.sun => const Color(0xFFD97706),
-    AppThemeKey.mist => const Color(0xFF6B8299),
-    AppThemeKey.sakura => const Color(0xFFC0446E),
-    AppThemeKey.night => const Color(0xFF2DD4A7),
-  };
-}
-
 class AppTheme {
   const AppTheme._();
 
-  static ThemeData byKey(AppThemeKey key) => switch (key) {
-    AppThemeKey.pine => _theme(
-      seed: const Color(0xFF0F6E56),
-      brightness: Brightness.light,
-    ),
-    AppThemeKey.sun => _theme(
-      seed: const Color(0xFFD97706),
-      brightness: Brightness.light,
-    ),
-    AppThemeKey.mist => _theme(
-      seed: const Color(0xFF6B8299),
-      brightness: Brightness.light,
-    ),
-    AppThemeKey.sakura => _theme(
-      seed: const Color(0xFFC0446E),
-      brightness: Brightness.light,
-    ),
-    AppThemeKey.night => _theme(
-      seed: const Color(0xFF2DD4A7),
-      brightness: Brightness.dark,
-    ),
-  };
+  static final ThemeData standard = _theme();
 
-  static ThemeData _theme({
-    required Color seed,
-    required Brightness brightness,
-  }) {
+  static ThemeData _theme() {
     final generatedScheme = ColorScheme.fromSeed(
-      seedColor: seed,
-      brightness: brightness,
+      seedColor: const Color(0xFF176B5B),
+      brightness: Brightness.light,
     );
-    final colorScheme = brightness == Brightness.light
-        ? generatedScheme.copyWith(
-            surface: const Color(0xFFFFFFFF),
-            surfaceContainerLowest: const Color(0xFFF7F8FA),
-            surfaceContainerLow: const Color(0xFFF2F4F5),
-            surfaceContainer: const Color(0xFFEDEFF1),
-            surfaceContainerHigh: const Color(0xFFE7EAEC),
-            surfaceContainerHighest: const Color(0xFFE1E5E7),
-            outline: const Color(0xFF74797D),
-            outlineVariant: const Color(0xFFDCE1E4),
-          )
-        : generatedScheme;
+    final colorScheme = generatedScheme.copyWith(
+      primary: const Color(0xFF176B5B),
+      onPrimary: const Color(0xFFFFFFFF),
+      primaryContainer: const Color(0xFFDCEFEA),
+      onPrimaryContainer: const Color(0xFF103E35),
+      surface: const Color(0xFFFFFFFF),
+      onSurface: const Color(0xFF1D2321),
+      onSurfaceVariant: const Color(0xFF606865),
+      surfaceContainerLowest: const Color(0xFFF6F7F8),
+      surfaceContainerLow: const Color(0xFFF1F3F3),
+      surfaceContainer: const Color(0xFFEBEEEE),
+      surfaceContainerHigh: const Color(0xFFE5E9E8),
+      surfaceContainerHighest: const Color(0xFFDDE3E1),
+      outline: const Color(0xFF747C79),
+      outlineVariant: const Color(0xFFDCE1E0),
+    );
 
     return ThemeData(
       useMaterial3: true,

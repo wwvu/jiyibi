@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:jiyibi/core/providers.dart';
-import 'package:jiyibi/core/theme/app_theme.dart';
-import 'package:jiyibi/core/theme/theme_provider.dart';
 import 'package:jiyibi/data/database/app_database.dart';
 import 'package:jiyibi/data/export/csv_exporter.dart';
 import 'package:jiyibi/presentation/settings/account_management_page.dart';
@@ -15,7 +13,6 @@ class SettingsPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final themeKey = ref.watch(themeControllerProvider);
     final statsAsync = ref.watch(recordStatsProvider);
     final catsAsync = ref.watch(allCategoriesProvider);
     final accountsAsync = ref.watch(allAccountsProvider);
@@ -44,15 +41,6 @@ class SettingsPage extends ConsumerWidget {
             ),
           ),
           const SizedBox(height: 12),
-          SettingsSection(
-            title: '外观',
-            children: [
-              _ThemePreview(
-                current: themeKey,
-                onTap: () => _showThemePicker(context, ref, themeKey),
-              ),
-            ],
-          ),
           SettingsSection(
             title: '分类与账户',
             children: [
@@ -135,62 +123,6 @@ class SettingsPage extends ConsumerWidget {
           ),
         ],
       ),
-    );
-  }
-
-  void _showThemePicker(
-    BuildContext context,
-    WidgetRef ref,
-    AppThemeKey current,
-  ) {
-    showDialog<void>(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text('选择主题'),
-          content: SizedBox(
-            width: 320,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                for (final key in AppThemeKey.values)
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 8),
-                    child: Material(
-                      color: key == current
-                          ? key.previewColor.withValues(alpha: 0.12)
-                          : Theme.of(context).colorScheme.surfaceContainerLow,
-                      borderRadius: BorderRadius.circular(14),
-                      child: ListTile(
-                        onTap: () {
-                          ref
-                              .read(themeControllerProvider.notifier)
-                              .setTheme(key);
-                          Navigator.of(context).pop();
-                        },
-                        leading: Container(
-                          width: 30,
-                          height: 30,
-                          decoration: BoxDecoration(
-                            color: key.previewColor,
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                        ),
-                        title: Text(
-                          key.label,
-                          style: const TextStyle(fontWeight: FontWeight.w700),
-                        ),
-                        trailing: key == current
-                            ? Icon(Icons.check_circle, color: key.previewColor)
-                            : null,
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-          ),
-        );
-      },
     );
   }
 
@@ -373,69 +305,6 @@ class _ProfileMetric extends StatelessWidget {
           ),
         ),
       ],
-    );
-  }
-}
-
-class _ThemePreview extends StatelessWidget {
-  const _ThemePreview({required this.current, required this.onTap});
-
-  final AppThemeKey current;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.all(14),
-          child: Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      '主题外观',
-                      style: theme.textTheme.bodyLarge?.copyWith(
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    const SizedBox(height: 3),
-                    Text(
-                      current.label,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              for (final key in AppThemeKey.values)
-                Container(
-                  width: 22,
-                  height: 22,
-                  margin: const EdgeInsets.only(left: 7),
-                  decoration: BoxDecoration(
-                    color: key.previewColor,
-                    shape: BoxShape.circle,
-                    border: key == current
-                        ? Border.all(
-                            color: theme.colorScheme.onSurface,
-                            width: 2,
-                          )
-                        : null,
-                  ),
-                ),
-              const SizedBox(width: 6),
-              const Icon(Icons.chevron_right),
-            ],
-          ),
-        ),
-      ),
     );
   }
 }

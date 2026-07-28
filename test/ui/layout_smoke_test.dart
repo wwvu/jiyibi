@@ -289,7 +289,7 @@ Future<void> _pump(
   await tester.pumpWidget(
     ProviderScope(
       overrides: overrides,
-      child: MaterialApp(theme: AppTheme.byKey(AppThemeKey.pine), home: page),
+      child: MaterialApp(theme: AppTheme.standard, home: page),
     ),
   );
   await tester.pumpAndSettle();
