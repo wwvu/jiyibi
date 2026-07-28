@@ -129,7 +129,7 @@ class SettingsPage extends ConsumerWidget {
               SettingsTile(
                 icon: Icons.info_outline,
                 title: '版本',
-                subtitle: 'v0.2.0 · 财务气象版',
+                subtitle: 'v1.0.0 · 财务气象版',
               ),
             ],
           ),

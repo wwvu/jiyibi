@@ -231,8 +231,8 @@
         <tr><td colspan="4" style="background:#f9fafb; font-weight:600; color:#0F6E56;">第 4 周 — 设置 + CSV 导出 + 测试</td></tr>
         <tr>
           <td class="task-id">T4.1</td>
-          <td>设置页 (记账统计 + 主题切换 + 分类/账户占位 + 隐私安全占位)</td>
-          <td><span class="code">settings_page.dart</span> <span class="code">settings_tile.dart</span></td>
+          <td>设置页 (记账统计 + 主题切换 + 分类/账户管理 + 隐私安全占位)</td>
+          <td><span class="code">settings_page.dart</span> <span class="code">category_management_page.dart</span> <span class="code">account_management_page.dart</span></td>
           <td class="status status-done">✅ 完成</td>
         </tr>
         <tr>
@@ -244,7 +244,7 @@
         <tr>
           <td class="task-id">T4.3</td>
           <td>测试打包 (Widget 冒烟测试 + 全部测试通过)</td>
-          <td><span class="code">widget_test.dart</span> + 全部 55 个测试通过</td>
+          <td><span class="code">widget_test.dart</span> + 全部 76 个测试通过</td>
           <td class="status status-done">✅ 完成</td>
         </tr>
       </tbody>
@@ -399,7 +399,7 @@
     </div>
     <div class="issue issue-info">
       <div class="title">2. minSdkVersion 未显式指定</div>
-      <span class="code">build.gradle.kts</span> 使用 <span class="code">flutter.minSdkVersion</span> 而非显式 <span class="code">minSdk = 21</span>。Flutter 3.44 默认值 ≥ 21 满足要求，但不够显式。如需精确控制可改为硬编码。
+      <span class="code">build.gradle.kts</span> 使用 <span class="code">flutter.minSdkVersion</span>。Flutter 3.44 默认值为 24，构建产物最低支持 Android 7.0。
     </div>
     <div class="issue issue-info">
       <div class="title">3. release 签名使用 debug keys</div>
@@ -487,8 +487,8 @@
   <!-- Verdict -->
   <div class="verdict">
     <h2>✅ MVP 代码开发完成</h2>
-    <p>16 个 MVP 任务全部完成 · 55 个测试全通过 · flutter analyze 零问题 · CLAUDE.md 开发约定全部合规</p>
-    <p style="margin-top: 8px;">下一步：初始化 Git → 配置 release 签名 → 真机测试 → 完成 S1-S3 加固后正式自用</p>
+    <p>16 个 MVP 任务全部完成 · 76 个测试全通过 · flutter analyze 零问题 · 分类/账户管理与预算沿用已补齐</p>
+    <p style="margin-top: 8px;">下一步：配置 release 签名 → 真机测试 → 完成 S1-S3 加固后正式自用</p>
   </div>
 
 </div>
