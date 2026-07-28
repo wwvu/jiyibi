@@ -67,4 +67,33 @@ class BudgetRepository {
         ))
         .go();
   }
+
+  /// 用来源月份完整替换目标月份预算，返回复制条数。
+  Future<int> replaceMonth({
+    required int sourceMonth,
+    required int targetMonth,
+  }) async {
+    return _db.transaction(() async {
+      final source = await getByMonth(sourceMonth);
+      if (source.isEmpty) return 0;
+      await (_db.delete(
+        _db.budgets,
+      )..where((budget) => budget.month.equals(targetMonth))).go();
+      await _db.batch((batch) {
+        batch.insertAll(
+          _db.budgets,
+          source
+              .map(
+                (budget) => BudgetsCompanion.insert(
+                  month: targetMonth,
+                  amountCents: budget.amountCents,
+                  categoryId: Value(budget.categoryId),
+                ),
+              )
+              .toList(),
+        );
+      });
+      return source.length;
+    });
+  }
 }

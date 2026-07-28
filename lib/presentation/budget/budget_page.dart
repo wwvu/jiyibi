@@ -22,7 +22,21 @@ class BudgetPage extends ConsumerWidget {
     final categoriesAsync = ref.watch(expenseCategoriesProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('预算计划')),
+      appBar: AppBar(
+        title: const Text('预算计划'),
+        actions: [
+          IconButton(
+            onPressed: () => _copyPreviousMonth(
+              context,
+              ref,
+              month: month,
+              hasCurrentBudgets: budgetsAsync.value?.isNotEmpty ?? false,
+            ),
+            icon: const Icon(Icons.content_copy_outlined),
+            tooltip: '沿用上月预算',
+          ),
+        ],
+      ),
       body: budgetsAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, _) => Center(child: Text('加载失败：$error')),
@@ -94,6 +108,53 @@ class BudgetPage extends ConsumerWidget {
           amountCents: MoneyUtils.yuanToCents(amountText),
         );
     ref.invalidate(monthBudgetsProvider);
+  }
+
+  Future<void> _copyPreviousMonth(
+    BuildContext context,
+    WidgetRef ref, {
+    required DateTime month,
+    required bool hasCurrentBudgets,
+  }) async {
+    if (hasCurrentBudgets) {
+      final confirmed = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('沿用上月预算'),
+          content: const Text('当前月份已有预算，继续后将用上月设置整体替换。'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('取消'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: const Text('替换'),
+            ),
+          ],
+        ),
+      );
+      if (confirmed != true) return;
+    }
+
+    final previous = DateTime(month.year, month.month - 1);
+    final copied = await ref
+        .read(budgetRepoProvider)
+        .replaceMonth(
+          sourceMonth: previous.year * 100 + previous.month,
+          targetMonth: month.year * 100 + month.month,
+        );
+    if (!context.mounted) return;
+    if (copied == 0) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('上月还没有可沿用的预算')));
+      return;
+    }
+    ref.invalidate(monthBudgetsProvider);
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text('已沿用 $copied 项预算')));
   }
 }
 

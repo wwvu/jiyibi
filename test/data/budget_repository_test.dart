@@ -96,4 +96,35 @@ void main() {
     final total = await repo.getTotalByMonth(202607);
     expect(total, isNull);
   });
+
+  test('replaceMonth copies source and replaces target atomically', () async {
+    await repo.upsert(month: 202606, categoryId: 0, amountCents: 500000);
+    await repo.upsert(month: 202606, categoryId: 1, amountCents: 120000);
+    await repo.upsert(month: 202607, categoryId: 0, amountCents: 300000);
+
+    final copied = await repo.replaceMonth(
+      sourceMonth: 202606,
+      targetMonth: 202607,
+    );
+    final july = await repo.getByMonth(202607);
+
+    expect(copied, 2);
+    expect(july, hasLength(2));
+    expect(
+      july.firstWhere((budget) => budget.categoryId == 0).amountCents,
+      500000,
+    );
+  });
+
+  test('replaceMonth leaves target unchanged when source is empty', () async {
+    await repo.upsert(month: 202607, categoryId: 0, amountCents: 300000);
+
+    final copied = await repo.replaceMonth(
+      sourceMonth: 202606,
+      targetMonth: 202607,
+    );
+
+    expect(copied, 0);
+    expect((await repo.getTotalByMonth(202607))!.amountCents, 300000);
+  });
 }
