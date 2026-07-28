@@ -142,7 +142,7 @@ class _OverviewContent extends StatelessWidget {
       onRefresh: onRefresh,
       child: ListView(
         physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.fromLTRB(16, 10, 16, 116),
+        padding: const EdgeInsets.fromLTRB(16, 10, 16, 28),
         children: [
           _GreetingHeader(now: now),
           const SizedBox(height: 18),
@@ -273,12 +273,12 @@ class _GreetingHeader extends StatelessWidget {
           width: 44,
           height: 44,
           decoration: BoxDecoration(
-            color: theme.colorScheme.primaryContainer,
-            borderRadius: BorderRadius.circular(14),
+            color: theme.colorScheme.primary.withValues(alpha: 0.1),
+            shape: BoxShape.circle,
           ),
           child: Icon(
             Icons.account_balance_wallet_outlined,
-            color: theme.colorScheme.onPrimaryContainer,
+            color: theme.colorScheme.primary,
           ),
         ),
       ],
@@ -301,27 +301,12 @@ class _PulseCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final finance = theme.extension<FinanceColors>();
-    final palette = switch (pulse.level) {
-      SpendingPulseLevel.unconfigured => (
-        theme.colorScheme.primary,
-        theme.colorScheme.primaryContainer,
-      ),
-      SpendingPulseLevel.calm => (
-        finance?.income ?? theme.colorScheme.primary,
-        (finance?.income ?? theme.colorScheme.primary).withValues(alpha: 0.12),
-      ),
-      SpendingPulseLevel.balanced => (
-        theme.colorScheme.primary,
-        theme.colorScheme.primaryContainer,
-      ),
-      SpendingPulseLevel.watch => (
-        theme.colorScheme.tertiary,
-        theme.colorScheme.tertiaryContainer,
-      ),
-      SpendingPulseLevel.over => (
-        theme.colorScheme.error,
-        theme.colorScheme.errorContainer,
-      ),
+    final statusColor = switch (pulse.level) {
+      SpendingPulseLevel.unconfigured => theme.colorScheme.primary,
+      SpendingPulseLevel.calm => finance?.income ?? theme.colorScheme.primary,
+      SpendingPulseLevel.balanced => theme.colorScheme.primary,
+      SpendingPulseLevel.watch => theme.colorScheme.tertiary,
+      SpendingPulseLevel.over => theme.colorScheme.error,
     };
     final icon = switch (pulse.level) {
       SpendingPulseLevel.unconfigured => Icons.tune_rounded,
@@ -334,9 +319,12 @@ class _PulseCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: palette.$2,
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: palette.$1.withValues(alpha: 0.22)),
+        color: Color.alphaBlend(
+          statusColor.withValues(alpha: 0.055),
+          theme.colorScheme.surface,
+        ),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: statusColor.withValues(alpha: 0.16)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -347,10 +335,10 @@ class _PulseCard extends StatelessWidget {
                 width: 38,
                 height: 38,
                 decoration: BoxDecoration(
-                  color: palette.$1.withValues(alpha: 0.14),
-                  borderRadius: BorderRadius.circular(12),
+                  color: statusColor.withValues(alpha: 0.14),
+                  shape: BoxShape.circle,
                 ),
-                child: Icon(icon, color: palette.$1, size: 22),
+                child: Icon(icon, color: statusColor, size: 22),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -366,7 +354,7 @@ class _PulseCard extends StatelessWidget {
                     ),
                     Text(
                       pulse.title,
-                      style: theme.textTheme.titleLarge?.copyWith(
+                      style: theme.textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.w800,
                       ),
                     ),
@@ -411,8 +399,8 @@ class _PulseCard extends StatelessWidget {
               child: LinearProgressIndicator(
                 value: (pulse.budgetProgressPermille / 1000).clamp(0.0, 1.0),
                 minHeight: 8,
-                color: palette.$1,
-                backgroundColor: palette.$1.withValues(alpha: 0.12),
+                color: statusColor,
+                backgroundColor: statusColor.withValues(alpha: 0.12),
               ),
             ),
             const SizedBox(height: 7),
@@ -616,17 +604,24 @@ class _QuickAction extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Material(
-      color: theme.colorScheme.surfaceContainerLow,
-      borderRadius: BorderRadius.circular(16),
+      color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(8),
         child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 12),
+          padding: const EdgeInsets.symmetric(vertical: 8),
           child: Column(
             children: [
-              Icon(icon, color: theme.colorScheme.primary, size: 22),
-              const SizedBox(height: 5),
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.primary.withValues(alpha: 0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(icon, color: theme.colorScheme.primary, size: 20),
+              ),
+              const SizedBox(height: 6),
               Text(
                 label,
                 style: theme.textTheme.labelMedium?.copyWith(
@@ -700,7 +695,7 @@ class _InsightCard extends StatelessWidget {
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: theme.colorScheme.surface,
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(8),
         border: Border.all(color: theme.colorScheme.outlineVariant),
       ),
       child: Column(
@@ -748,7 +743,7 @@ class _EmptyRecords extends StatelessWidget {
       padding: const EdgeInsets.all(22),
       decoration: BoxDecoration(
         color: theme.colorScheme.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(8),
       ),
       child: Row(
         children: [

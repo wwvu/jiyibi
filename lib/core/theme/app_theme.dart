@@ -52,10 +52,22 @@ class AppTheme {
     required Color seed,
     required Brightness brightness,
   }) {
-    final colorScheme = ColorScheme.fromSeed(
+    final generatedScheme = ColorScheme.fromSeed(
       seedColor: seed,
       brightness: brightness,
     );
+    final colorScheme = brightness == Brightness.light
+        ? generatedScheme.copyWith(
+            surface: const Color(0xFFFFFFFF),
+            surfaceContainerLowest: const Color(0xFFF7F8FA),
+            surfaceContainerLow: const Color(0xFFF2F4F5),
+            surfaceContainer: const Color(0xFFEDEFF1),
+            surfaceContainerHigh: const Color(0xFFE7EAEC),
+            surfaceContainerHighest: const Color(0xFFE1E5E7),
+            outline: const Color(0xFF74797D),
+            outlineVariant: const Color(0xFFDCE1E4),
+          )
+        : generatedScheme;
 
     return ThemeData(
       useMaterial3: true,
@@ -79,7 +91,7 @@ class AppTheme {
         elevation: 0,
         margin: EdgeInsets.zero,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(18),
+          borderRadius: BorderRadius.circular(8),
           side: BorderSide(color: colorScheme.outlineVariant),
         ),
       ),
@@ -91,7 +103,7 @@ class AppTheme {
       listTileTheme: ListTileThemeData(
         contentPadding: const EdgeInsets.symmetric(horizontal: 16),
         minLeadingWidth: 44,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       ),
       bottomNavigationBarTheme: BottomNavigationBarThemeData(
         selectedItemColor: colorScheme.primary,
@@ -184,15 +196,13 @@ class AppTheme {
       iconButtonTheme: IconButtonThemeData(
         style: IconButton.styleFrom(
           foregroundColor: colorScheme.onSurfaceVariant,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
+          shape: const CircleBorder(),
         ),
       ),
       dialogTheme: DialogThemeData(
         backgroundColor: colorScheme.surface,
         surfaceTintColor: Colors.transparent,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       ),
       bottomSheetTheme: BottomSheetThemeData(
         backgroundColor: colorScheme.surface,
@@ -200,7 +210,7 @@ class AppTheme {
         modalBackgroundColor: colorScheme.surface,
         modalBarrierColor: colorScheme.scrim.withValues(alpha: 0.32),
         shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
         ),
       ),
       snackBarTheme: SnackBarThemeData(

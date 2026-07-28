@@ -448,7 +448,7 @@ class _RecordListState extends State<_RecordList> {
     final grouped = _groupByDay(visibleRecords);
 
     return ListView.builder(
-      padding: const EdgeInsets.fromLTRB(16, 2, 16, 112),
+      padding: const EdgeInsets.fromLTRB(16, 2, 16, 28),
       itemCount: grouped.length,
       itemBuilder: (context, index) {
         final entry = grouped[index];

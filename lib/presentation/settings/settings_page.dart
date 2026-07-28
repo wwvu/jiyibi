@@ -28,7 +28,7 @@ class SettingsPage extends ConsumerWidget {
         ),
       ),
       body: ListView(
-        padding: const EdgeInsets.fromLTRB(16, 4, 16, 116),
+        padding: const EdgeInsets.fromLTRB(16, 4, 16, 28),
         children: [
           statsAsync.when(
             loading: () => const SizedBox(height: 154),

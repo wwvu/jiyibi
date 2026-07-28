@@ -116,7 +116,7 @@ class _ReportPageState extends ConsumerState<ReportPage> {
         : topCategory.amountCents * 100 ~/ totalCents;
 
     return ListView(
-      padding: const EdgeInsets.fromLTRB(16, 4, 16, 116),
+      padding: const EdgeInsets.fromLTRB(16, 4, 16, 28),
       children: [
         Row(
           children: [
