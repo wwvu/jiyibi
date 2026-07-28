@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'package:jiyibi/core/utils/money_utils.dart';
 import 'package:jiyibi/data/database/app_database.dart';
+import 'package:jiyibi/shared/widgets/category_icon.dart';
 
 /// 分类预算条：分类名 + 已用/预算 + 进度条（超支变红）。
 class CategoryBudgetBar extends StatelessWidget {
@@ -33,21 +34,12 @@ class CategoryBudgetBar extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
           child: Row(
             children: [
-              Container(
-                width: 32,
-                height: 32,
-                decoration: BoxDecoration(
-                  color: categoryColor.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                alignment: Alignment.center,
-                child: Text(
-                  category.icon,
-                  style: TextStyle(
-                    color: categoryColor,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
+              CategoryIcon(
+                name: category.name,
+                storedIcon: category.icon,
+                color: categoryColor,
+                size: 34,
+                iconSize: 18,
               ),
               const SizedBox(width: 12),
               Expanded(

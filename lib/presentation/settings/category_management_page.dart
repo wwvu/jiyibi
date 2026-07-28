@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:jiyibi/core/providers.dart';
 import 'package:jiyibi/data/database/app_database.dart';
+import 'package:jiyibi/shared/widgets/category_icon.dart';
 import 'package:jiyibi/shared/widgets/type_segmented_control.dart';
 
 class CategoryManagementPage extends ConsumerStatefulWidget {
@@ -153,18 +154,12 @@ class _CategoryTile extends StatelessWidget {
       borderRadius: BorderRadius.circular(8),
       clipBehavior: Clip.antiAlias,
       child: ListTile(
-        leading: Container(
-          width: 42,
-          height: 42,
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            color: color.withValues(alpha: 0.13),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Text(
-            category.icon,
-            style: TextStyle(color: color, fontWeight: FontWeight.w700),
-          ),
+        leading: CategoryIcon(
+          name: category.name,
+          storedIcon: category.icon,
+          color: color,
+          size: 42,
+          iconSize: 21,
         ),
         title: Text(
           category.name,
@@ -229,26 +224,29 @@ class _CategoryDialog extends StatefulWidget {
 
 class _CategoryDialogState extends State<_CategoryDialog> {
   late final TextEditingController _nameController;
-  late final TextEditingController _iconController;
+  late String _selectedIcon;
   String? _errorText;
 
   @override
   void initState() {
     super.initState();
     _nameController = TextEditingController(text: widget.category?.name ?? '');
-    _iconController = TextEditingController(text: widget.category?.icon ?? '');
+    _selectedIcon = CategoryIcons.keyFor(
+      name: widget.category?.name ?? '',
+      storedIcon: widget.category?.icon,
+    );
   }
 
   @override
   void dispose() {
     _nameController.dispose();
-    _iconController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
+      scrollable: true,
       title: Text(widget.category == null ? '新增分类' : '编辑分类'),
       content: Column(
         mainAxisSize: MainAxisSize.min,
@@ -257,15 +255,52 @@ class _CategoryDialogState extends State<_CategoryDialog> {
             controller: _nameController,
             autofocus: true,
             maxLength: 20,
-            decoration: InputDecoration(labelText: '名称', errorText: _errorText),
+            decoration: InputDecoration(
+              labelText: '名称',
+              errorText: _errorText,
+              counterText: '',
+            ),
           ),
-          const SizedBox(height: 8),
-          TextField(
-            controller: _iconController,
-            maxLength: 2,
-            decoration: const InputDecoration(
-              labelText: '图标文字',
-              hintText: '如：餐',
+          Align(
+            alignment: Alignment.centerLeft,
+            child: Text('图标', style: Theme.of(context).textTheme.labelLarge),
+          ),
+          const SizedBox(height: 10),
+          SizedBox(
+            width: 280,
+            child: Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                for (final option in CategoryIcons.options)
+                  Tooltip(
+                    message: option.label,
+                    child: InkWell(
+                      onTap: () => setState(() => _selectedIcon = option.key),
+                      customBorder: const CircleBorder(),
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 150),
+                        width: 40,
+                        height: 40,
+                        decoration: BoxDecoration(
+                          color: option.key == _selectedIcon
+                              ? Theme.of(context).colorScheme.primary
+                              : Theme.of(
+                                  context,
+                                ).colorScheme.surfaceContainerHigh,
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          option.icon,
+                          size: 21,
+                          color: option.key == _selectedIcon
+                              ? Theme.of(context).colorScheme.onPrimary
+                              : Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
             ),
           ),
         ],
@@ -282,11 +317,10 @@ class _CategoryDialogState extends State<_CategoryDialog> {
 
   void _submit() {
     final name = _nameController.text.trim();
-    final icon = _iconController.text.trim();
-    if (name.isEmpty || icon.isEmpty) {
-      setState(() => _errorText = '名称和图标不能为空');
+    if (name.isEmpty) {
+      setState(() => _errorText = '分类名称不能为空');
       return;
     }
-    Navigator.of(context).pop(_CategoryDraft(name: name, icon: icon));
+    Navigator.of(context).pop(_CategoryDraft(name: name, icon: _selectedIcon));
   }
 }

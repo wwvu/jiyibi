@@ -6,6 +6,7 @@ import 'package:jiyibi/core/providers.dart';
 import 'package:jiyibi/core/theme/app_theme.dart';
 import 'package:jiyibi/core/utils/money_utils.dart';
 import 'package:jiyibi/data/database/app_database.dart';
+import 'package:jiyibi/shared/widgets/category_icon.dart';
 import 'package:jiyibi/presentation/calendar/calendar_page.dart';
 import 'package:jiyibi/presentation/detail/widgets/month_summary_card.dart';
 import 'package:jiyibi/presentation/detail/widgets/record_list_tile.dart';
@@ -347,7 +348,14 @@ class _FilterSheetState extends State<_FilterSheet> {
                     ),
                     for (final category in visibleCategories)
                       FilterChip(
-                        avatar: Text(category.icon),
+                        avatar: Icon(
+                          CategoryIcons.resolve(
+                            name: category.name,
+                            storedIcon: category.icon,
+                          ),
+                          size: 17,
+                          color: Color(category.color),
+                        ),
                         label: Text(category.name),
                         selected: _categoryId == category.id,
                         onSelected: (_) =>

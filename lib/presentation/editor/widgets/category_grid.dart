@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 
 import 'package:jiyibi/data/database/app_database.dart';
+import 'package:jiyibi/shared/widgets/category_icon.dart';
 
-/// 分类网格：4 列，圆形彩色背景 + 首字 + 分类名，选中高亮。
+/// 分类网格：4 列，圆形图标 + 分类名，选中高亮。
 class CategoryGrid extends StatelessWidget {
   const CategoryGrid({
     super.key,
@@ -69,23 +70,13 @@ class _CategoryItem extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             mainAxisSize: MainAxisSize.min,
             children: [
-              AnimatedContainer(
-                duration: const Duration(milliseconds: 150),
-                width: 42,
-                height: 42,
-                decoration: BoxDecoration(
-                  color: isSelected ? color : color.withValues(alpha: 0.13),
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                alignment: Alignment.center,
-                child: Text(
-                  category.icon,
-                  style: TextStyle(
-                    fontSize: 20,
-                    color: isSelected ? theme.colorScheme.onPrimary : color,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
+              CategoryIcon(
+                name: category.name,
+                storedIcon: category.icon,
+                color: color,
+                size: 42,
+                iconSize: 21,
+                selected: isSelected,
               ),
               const SizedBox(height: 6),
               Text(

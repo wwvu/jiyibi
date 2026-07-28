@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:jiyibi/core/theme/app_theme.dart';
 import 'package:jiyibi/core/utils/money_utils.dart';
 import 'package:jiyibi/data/database/app_database.dart';
+import 'package:jiyibi/shared/widgets/category_icon.dart';
 
 /// 单条流水行：分类圆形图标 + 备注/分类名 + 右侧金额。
 class RecordListTile extends StatelessWidget {
@@ -29,7 +30,6 @@ class RecordListTile extends StatelessWidget {
         : (finance?.income ?? theme.colorScheme.primary);
 
     final categoryName = category?.name ?? '未分类';
-    final categoryIcon = category?.icon ?? '？';
     final categoryColor = category != null
         ? Color(category!.color)
         : theme.colorScheme.outline;
@@ -47,7 +47,13 @@ class RecordListTile extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
           child: Row(
             children: [
-              _CategoryBadge(icon: categoryIcon, color: categoryColor),
+              CategoryIcon(
+                name: categoryName,
+                storedIcon: category?.icon,
+                color: categoryColor,
+                size: 44,
+                iconSize: 22,
+              ),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
@@ -84,34 +90,6 @@ class RecordListTile extends StatelessWidget {
               ),
             ],
           ),
-        ),
-      ),
-    );
-  }
-}
-
-class _CategoryBadge extends StatelessWidget {
-  const _CategoryBadge({required this.icon, required this.color});
-
-  final String icon;
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 44,
-      height: 44,
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.13),
-        borderRadius: BorderRadius.circular(14),
-      ),
-      alignment: Alignment.center,
-      child: Text(
-        icon,
-        style: TextStyle(
-          fontSize: 18,
-          color: color,
-          fontWeight: FontWeight.w600,
         ),
       ),
     );
