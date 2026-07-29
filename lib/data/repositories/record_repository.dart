@@ -202,19 +202,31 @@ class RecordRepository {
   }
 
   /// 统计：总记录数、记账天数（有记录的不同日期数）、连续记账天数（从今天往前）。
+  ///
+  /// 只查 date 列并用 SQL 聚合，避免全表加载所有字段。
   Future<({int totalRecords, int distinctDays, int currentStreak})>
   getStats() async {
-    final records = await (_db.select(
-      _db.records,
-    )..orderBy([(r) => OrderingTerm.desc(r.date)])).get();
+    final countRow = await (_db.selectOnly(_db.records)
+          ..addColumns([_db.records.id.count()]))
+        .getSingle();
+    final totalRecords = countRow.read(_db.records.id.count()) ?? 0;
+
+    // SQL 层 SELECT DISTINCT date，只拉日期列，避免全表加载所有字段。
+    final dateRows = await (_db.selectOnly(_db.records, distinct: true)
+          ..addColumns([_db.records.date]))
+        .get();
 
     final today = DateTime.now();
     final todayDate = DateTime(today.year, today.month, today.day);
 
-    final distinctDates = <DateTime>{};
-    for (final r in records) {
-      distinctDates.add(DateTime(r.date.year, r.date.month, r.date.day));
-    }
+    final distinctDates = <DateTime>{
+      for (final row in dateRows)
+        DateTime(
+          row.read(_db.records.date)!.year,
+          row.read(_db.records.date)!.month,
+          row.read(_db.records.date)!.day,
+        ),
+    };
 
     var streak = 0;
     var cursor = todayDate;
@@ -228,7 +240,7 @@ class RecordRepository {
     }
 
     return (
-      totalRecords: records.length,
+      totalRecords: totalRecords,
       distinctDays: distinctDates.length,
       currentStreak: streak,
     );
